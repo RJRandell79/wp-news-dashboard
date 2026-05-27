@@ -9,6 +9,7 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: sans-serif; display: flex; height: 100vh; overflow: hidden; }
 
+    /* Sidebar */
     #sidebar {
       width: 320px; flex-shrink: 0;
       display: flex; flex-direction: column;
@@ -17,25 +18,59 @@
     #sidebar h1 {
       font-size: 14px; font-weight: 600; letter-spacing: .03em;
       padding: 14px 16px; border-bottom: 1px solid #e0e0e0;
-      color: #333; text-transform: uppercase;
+      color: #333; text-transform: uppercase; flex-shrink: 0;
     }
     #post-list { flex: 1; overflow-y: auto; }
-    .post-item {
-      padding: 12px 16px; border-bottom: 1px solid #ececec;
-      cursor: pointer; transition: background .15s;
+
+    /* Location rows */
+    .loc-item { border-bottom: 1px solid #ececec; }
+    .loc-header {
+      padding: 11px 16px; cursor: pointer;
+      display: flex; align-items: center; gap: 8px;
+      transition: background .15s;
     }
-    .post-item:hover { background: #f0f0f0; }
-    .post-item.active { background: #fdecea; border-left: 3px solid #e74c3c; }
-    .post-item .post-title { font-size: 13px; font-weight: 500; color: #222; line-height: 1.4; }
-    .post-item .post-meta  { font-size: 11px; color: #888; margin-top: 4px; }
+    .loc-header:hover  { background: #f0f0f0; }
+    .loc-header.active { background: #fdecea; border-left: 3px solid #e74c3c; padding-left: 13px; }
+    .loc-name  { flex: 1; font-size: 13px; font-weight: 500; color: #222; line-height: 1.4; }
+    .loc-count {
+      font-size: 11px; font-weight: 600; color: #fff;
+      border-radius: 10px; padding: 1px 7px; flex-shrink: 0;
+    }
+    .loc-chevron { font-size: 9px; color: #bbb; transition: transform .2s; flex-shrink: 0; }
+    .loc-header.open .loc-chevron { transform: rotate(90deg); }
+
+    /* Article sub-list */
+    .article-list { display: none; border-top: 1px solid #ececec; }
+    .article-list.open { display: block; }
+    .article-list a {
+      display: block; padding: 8px 16px 8px 30px;
+      font-size: 12px; color: #444; text-decoration: none;
+      border-bottom: 1px solid #f0f0f0; line-height: 1.4;
+    }
+    .article-list a:last-child { border-bottom: none; }
+    .article-list a:hover { background: #f0f0f0; color: #111; }
+    .article-date { font-size: 11px; color: #aaa; margin-top: 2px; }
+
+    /* Dot used in both sidebar and legend */
     .cat-dot {
-      display: inline-block; width: 7px; height: 7px;
-      border-radius: 50%; margin-right: 4px; vertical-align: middle;
+      display: inline-block; width: 8px; height: 8px;
+      border-radius: 50%; flex-shrink: 0;
     }
 
+    /* Map */
     #map-wrap { flex: 1; position: relative; }
     #map { position: absolute; inset: 0; }
-    .mapboxgl-popup-content a { color: #e74c3c; }
+    .mapboxgl-popup-content { font-size: 13px; line-height: 1.5; }
+    .mapboxgl-popup-content strong { display: block; margin-bottom: 6px; }
+    .mapboxgl-popup-content .article-links { max-height: 200px; overflow-y: auto; }
+    .mapboxgl-popup-content .article-links a {
+      display: block; color: #e74c3c; text-decoration: none;
+      padding: 3px 0; border-bottom: 1px solid #f0f0f0; font-size: 12px;
+    }
+    .mapboxgl-popup-content .article-links a:last-child { border: none; }
+    .mapboxgl-popup-content .article-links a:hover { text-decoration: underline; }
+    .mapboxgl-popup-content .article-links .art-date { color: #aaa; font-size: 11px; }
+
     #legend {
       position: absolute; bottom: 32px; left: 12px; z-index: 1;
       background: #fff; border-radius: 6px; padding: 10px 14px;
@@ -49,7 +84,7 @@
 </head>
 <body>
   <div id="sidebar">
-    <h1>Articles <span id="post-count" style="font-weight:400;color:#888"></span></h1>
+    <h1>Locations <span id="loc-count" style="font-weight:400;color:#888"></span></h1>
     <div id="post-list"></div>
   </div>
 
@@ -57,6 +92,7 @@
     <div id="map"></div>
     <div id="legend">
       <span class="legend-dot" style="background:#e74c3c"></span>Regeneration<br>
+      <span class="legend-dot" style="background:#f39c12"></span>Proposed<br>
       <span class="legend-dot" style="background:#3498db"></span>Landmark<br>
       <span class="legend-dot" style="background:#95a5a6"></span>Street
     </div>
@@ -64,9 +100,15 @@
 
   <script src="https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.js"></script>
   <script>
-    const CATEGORY_COLOURS = { regeneration: '#e74c3c', landmark: '#3498db', street: '#95a5a6' };
-    let activePopup = null;
-    let activeItem  = null;
+    const CATEGORY_COLOURS = {
+      regeneration: '#e74c3c',
+      proposed:     '#f39c12',
+      landmark:     '#3498db',
+      street:       '#95a5a6',
+    };
+
+    let activePopup  = null;
+    let activeHeader = null;
 
     async function init() {
       const { accessToken } = await fetch('/map').then(r => r.json());
@@ -83,28 +125,53 @@
 
       map.on('load', async () => {
         const geojson = await fetch('/posts/geo').then(r => r.json());
+        const list    = document.getElementById('post-list');
+
+        document.getElementById('loc-count').textContent = `(${geojson.features.length})`;
 
         // Build sidebar
-        const list = document.getElementById('post-list');
-        document.getElementById('post-count').textContent = `(${geojson.features.length})`;
-
         geojson.features.forEach((f, i) => {
-          const { title, link, location, category } = f.properties;
-          const colour = CATEGORY_COLOURS[category] ?? '#999';
-          const el = document.createElement('div');
-          el.className = 'post-item';
-          el.dataset.index = i;
-          el.innerHTML = `
-            <div class="post-title">${title}</div>
-            <div class="post-meta">
-              <span class="cat-dot" style="background:${colour}"></span>${location}
-            </div>`;
-          el.addEventListener('click', () => flyTo(map, f, el));
-          list.appendChild(el);
+          const { location, category, count, articles: articlesJson } = f.properties;
+          const articles = JSON.parse(articlesJson);
+          const colour   = CATEGORY_COLOURS[category] ?? '#999';
+
+          const item = document.createElement('div');
+          item.className = 'loc-item';
+          item.dataset.index = i;
+
+          const header = document.createElement('div');
+          header.className = 'loc-header';
+          header.innerHTML = `
+            <span class="cat-dot" style="background:${colour}"></span>
+            <span class="loc-name">${location}</span>
+            <span class="loc-count" style="background:${colour}">${count}</span>
+            <span class="loc-chevron">&#9654;</span>`;
+
+          const articleList = document.createElement('div');
+          articleList.className = 'article-list';
+          articles.forEach(a => {
+            const link = document.createElement('a');
+            link.href = a.link;
+            link.target = '_blank';
+            link.rel = 'noopener noreferrer';
+            link.innerHTML = `${a.title}<div class="article-date">${a.date.slice(0, 10)}</div>`;
+            articleList.appendChild(link);
+          });
+
+          header.addEventListener('click', () => {
+            const opening = !articleList.classList.contains('open');
+            articleList.classList.toggle('open', opening);
+            header.classList.toggle('open', opening);
+            flyTo(map, f, header);
+          });
+
+          item.appendChild(header);
+          item.appendChild(articleList);
+          list.appendChild(item);
         });
 
         // Map layers
-        map.addSource('posts', { type: 'geojson', data: geojson, cluster: true, clusterMaxZoom: 14 });
+        map.addSource('posts', { type: 'geojson', data: geojson, cluster: true, clusterMaxZoom: 13 });
 
         map.addLayer({
           id: 'clusters',
@@ -112,9 +179,9 @@
           source: 'posts',
           filter: ['has', 'point_count'],
           paint: {
-            'circle-color': '#e74c3c',
+            'circle-color': '#888',
             'circle-radius': ['step', ['get', 'point_count'], 16, 5, 22, 20, 28],
-            'circle-opacity': 0.7,
+            'circle-opacity': 0.6,
           },
         });
 
@@ -133,12 +200,14 @@
           source: 'posts',
           filter: ['!', ['has', 'point_count']],
           paint: {
-            'circle-radius': 8,
+            // Radius scales with article count: 1 article → 7px, 10 → 13px, 20+ → 17px
+            'circle-radius': ['interpolate', ['linear'], ['get', 'count'], 1, 7, 10, 13, 20, 17],
             'circle-color': [
               'match', ['get', 'category'],
               'regeneration', '#e74c3c',
-              'landmark',    '#3498db',
-              'street',      '#95a5a6',
+              'proposed',     '#f39c12',
+              'landmark',     '#3498db',
+              'street',       '#95a5a6',
               '#999',
             ],
             'circle-stroke-width': 2,
@@ -147,10 +216,10 @@
         });
 
         map.on('click', 'posts-circles', e => {
-          const f = e.features[0];
-          const idx = geojson.features.findIndex(x => x.properties.id === f.properties.id);
-          const listItem = list.querySelector(`[data-index="${idx}"]`);
-          flyTo(map, f, listItem);
+          const props = e.features[0].properties;
+          const idx   = geojson.features.findIndex(f => f.properties.location === props.location);
+          const headerEl = list.querySelector(`[data-index="${idx}"] .loc-header`);
+          flyTo(map, geojson.features[idx], headerEl);
         });
 
         map.on('click', 'clusters', e => {
@@ -167,24 +236,32 @@
       });
     }
 
-    function flyTo(map, feature, listItem) {
-      const { title, link, location } = feature.properties;
-      const coords = feature.geometry.coordinates;
+    function flyTo(map, feature, headerEl) {
+      const { location, articles: articlesJson } = feature.properties;
+      const articles = JSON.parse(articlesJson);
+      const coords   = feature.geometry.coordinates;
 
-      if (activePopup) activePopup.remove();
-      if (activeItem)  activeItem.classList.remove('active');
+      if (activePopup)  activePopup.remove();
+      if (activeHeader) activeHeader.classList.remove('active');
 
       map.flyTo({ center: coords, zoom: Math.max(map.getZoom(), 15), speed: 1.4 });
 
-      activePopup = new mapboxgl.Popup({ maxWidth: '280px' })
+      const links = articles.map(a =>
+        `<a href="${a.link}" target="_blank" rel="noopener noreferrer">
+          ${a.title}
+          <span class="art-date">${a.date.slice(0, 10)}</span>
+        </a>`
+      ).join('');
+
+      activePopup = new mapboxgl.Popup({ maxWidth: '320px' })
         .setLngLat(coords)
-        .setHTML(`<strong>${title}</strong><br><em>${location}</em><br><a href="${link}" target="_blank">Read more →</a>`)
+        .setHTML(`<strong>${location}</strong><div class="article-links">${links}</div>`)
         .addTo(map);
 
-      if (listItem) {
-        listItem.classList.add('active');
-        listItem.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-        activeItem = listItem;
+      if (headerEl) {
+        headerEl.classList.add('active');
+        headerEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        activeHeader = headerEl;
       }
     }
 

@@ -66,18 +66,29 @@ function regenScore(post) {
 }
 
 app.get('/posts/geo', (req, res) => {
-  const posts = db.prepare('SELECT id, title, link, excerpt, content FROM posts ORDER BY date DESC').all();
-  const features = posts.flatMap(post => {
-    if (regenScore(post) < MIN_REGEN_SCORE) return [];
-    if (hasNegativeSignal(post)) return [];
+  const posts = db.prepare('SELECT id, title, link, excerpt, content, date FROM posts ORDER BY date DESC').all();
+
+  const locationMap = new Map();
+  for (const post of posts) {
+    if (regenScore(post) < MIN_REGEN_SCORE) continue;
+    if (hasNegativeSignal(post)) continue;
     const match = matchGazetteer(post);
-    if (!match) return [];
-    return [{
-      type: 'Feature',
-      geometry: { type: 'Point', coordinates: [match.lon, match.lat] },
-      properties: { id: post.id, title: post.title, link: post.link, location: match.name, category: match.category },
-    }];
-  });
+    if (!match) continue;
+    if (!locationMap.has(match.id)) locationMap.set(match.id, { entry: match, articles: [] });
+    locationMap.get(match.id).articles.push({ id: post.id, title: post.title, link: post.link, date: post.date });
+  }
+
+  const features = Array.from(locationMap.values()).map(({ entry, articles }) => ({
+    type: 'Feature',
+    geometry: { type: 'Point', coordinates: [entry.lon, entry.lat] },
+    properties: {
+      location: entry.name,
+      category: entry.category,
+      count: articles.length,
+      articles: JSON.stringify(articles),
+    },
+  }));
+
   res.json({ type: 'FeatureCollection', features });
 });
 
