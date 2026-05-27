@@ -7,7 +7,33 @@
   <link href="https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.css" rel="stylesheet" />
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: sans-serif; }
+    body { font-family: sans-serif; display: flex; height: 100vh; overflow: hidden; }
+
+    #sidebar {
+      width: 320px; flex-shrink: 0;
+      display: flex; flex-direction: column;
+      border-right: 1px solid #e0e0e0; background: #fafafa;
+    }
+    #sidebar h1 {
+      font-size: 14px; font-weight: 600; letter-spacing: .03em;
+      padding: 14px 16px; border-bottom: 1px solid #e0e0e0;
+      color: #333; text-transform: uppercase;
+    }
+    #post-list { flex: 1; overflow-y: auto; }
+    .post-item {
+      padding: 12px 16px; border-bottom: 1px solid #ececec;
+      cursor: pointer; transition: background .15s;
+    }
+    .post-item:hover { background: #f0f0f0; }
+    .post-item.active { background: #fdecea; border-left: 3px solid #e74c3c; }
+    .post-item .post-title { font-size: 13px; font-weight: 500; color: #222; line-height: 1.4; }
+    .post-item .post-meta  { font-size: 11px; color: #888; margin-top: 4px; }
+    .cat-dot {
+      display: inline-block; width: 7px; height: 7px;
+      border-radius: 50%; margin-right: 4px; vertical-align: middle;
+    }
+
+    #map-wrap { flex: 1; position: relative; }
     #map { position: absolute; inset: 0; }
     .mapboxgl-popup-content a { color: #e74c3c; }
     #legend {
@@ -22,15 +48,26 @@
   </style>
 </head>
 <body>
-  <div id="map"></div>
-  <div id="legend">
-    <span class="legend-dot" style="background:#e74c3c"></span>Regeneration<br>
-    <span class="legend-dot" style="background:#3498db"></span>Landmark<br>
-    <span class="legend-dot" style="background:#95a5a6"></span>Street
+  <div id="sidebar">
+    <h1>Articles <span id="post-count" style="font-weight:400;color:#888"></span></h1>
+    <div id="post-list"></div>
+  </div>
+
+  <div id="map-wrap">
+    <div id="map"></div>
+    <div id="legend">
+      <span class="legend-dot" style="background:#e74c3c"></span>Regeneration<br>
+      <span class="legend-dot" style="background:#3498db"></span>Landmark<br>
+      <span class="legend-dot" style="background:#95a5a6"></span>Street
+    </div>
   </div>
 
   <script src="https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.js"></script>
   <script>
+    const CATEGORY_COLOURS = { regeneration: '#e74c3c', landmark: '#3498db', street: '#95a5a6' };
+    let activePopup = null;
+    let activeItem  = null;
+
     async function init() {
       const { accessToken } = await fetch('/map').then(r => r.json());
       mapboxgl.accessToken = accessToken;
@@ -47,6 +84,26 @@
       map.on('load', async () => {
         const geojson = await fetch('/posts/geo').then(r => r.json());
 
+        // Build sidebar
+        const list = document.getElementById('post-list');
+        document.getElementById('post-count').textContent = `(${geojson.features.length})`;
+
+        geojson.features.forEach((f, i) => {
+          const { title, link, location, category } = f.properties;
+          const colour = CATEGORY_COLOURS[category] ?? '#999';
+          const el = document.createElement('div');
+          el.className = 'post-item';
+          el.dataset.index = i;
+          el.innerHTML = `
+            <div class="post-title">${title}</div>
+            <div class="post-meta">
+              <span class="cat-dot" style="background:${colour}"></span>${location}
+            </div>`;
+          el.addEventListener('click', () => flyTo(map, f, el));
+          list.appendChild(el);
+        });
+
+        // Map layers
         map.addSource('posts', { type: 'geojson', data: geojson, cluster: true, clusterMaxZoom: 14 });
 
         map.addLayer({
@@ -90,11 +147,10 @@
         });
 
         map.on('click', 'posts-circles', e => {
-          const { title, link, location } = e.features[0].properties;
-          new mapboxgl.Popup({ maxWidth: '280px' })
-            .setLngLat(e.lngLat)
-            .setHTML(`<strong>${title}</strong><br><em>${location}</em><br><a href="${link}" target="_blank">Read more →</a>`)
-            .addTo(map);
+          const f = e.features[0];
+          const idx = geojson.features.findIndex(x => x.properties.id === f.properties.id);
+          const listItem = list.querySelector(`[data-index="${idx}"]`);
+          flyTo(map, f, listItem);
         });
 
         map.on('click', 'clusters', e => {
@@ -109,6 +165,27 @@
         map.on('mouseenter', 'clusters',      () => map.getCanvas().style.cursor = 'pointer');
         map.on('mouseleave', 'clusters',      () => map.getCanvas().style.cursor = '');
       });
+    }
+
+    function flyTo(map, feature, listItem) {
+      const { title, link, location } = feature.properties;
+      const coords = feature.geometry.coordinates;
+
+      if (activePopup) activePopup.remove();
+      if (activeItem)  activeItem.classList.remove('active');
+
+      map.flyTo({ center: coords, zoom: Math.max(map.getZoom(), 15), speed: 1.4 });
+
+      activePopup = new mapboxgl.Popup({ maxWidth: '280px' })
+        .setLngLat(coords)
+        .setHTML(`<strong>${title}</strong><br><em>${location}</em><br><a href="${link}" target="_blank">Read more →</a>`)
+        .addTo(map);
+
+      if (listItem) {
+        listItem.classList.add('active');
+        listItem.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        activeItem = listItem;
+      }
     }
 
     init();
