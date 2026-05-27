@@ -3,4 +3,5 @@
 .nvmrc
 .env
 .DS_Store
+/memory
 /data/data.db
