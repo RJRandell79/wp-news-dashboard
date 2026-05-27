@@ -3,11 +3,12 @@ import express from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import db from './db.js';
-import { PRESTON_GAZETTEER } from './data/gazetteer.js';
+import { PRESTON_GAZETTEER, REGEN_KEYWORDS } from './data/gazetteer.js';
 
 const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer);
+const MIN_REGEN_SCORE = 3;
 
 app.use(express.json());
 app.use(express.static('public'));
@@ -38,9 +39,17 @@ function matchGazetteer(post) {
   return null;
 }
 
+function regenScore(post) {
+  const text = `${post.title} ${post.excerpt}`.toLowerCase();
+  return Object.entries(REGEN_KEYWORDS).reduce(
+    (sum, [keyword, weight]) => text.includes(keyword) ? sum + weight : sum, 0
+  );
+}
+
 app.get('/posts/geo', (req, res) => {
-  const posts = db.prepare('SELECT id, title, link, excerpt FROM posts ORDER BY date DESC').all();
+  const posts = db.prepare('SELECT id, title, link, excerpt, content FROM posts ORDER BY date DESC').all();
   const features = posts.flatMap(post => {
+    if (regenScore(post) < MIN_REGEN_SCORE) return [];
     const match = matchGazetteer(post);
     if (!match) return [];
     return [{
