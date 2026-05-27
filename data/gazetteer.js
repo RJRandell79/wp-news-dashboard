@@ -11,7 +11,7 @@ export const PRESTON_GAZETTEER = [
   },
   {
     id: 'stoneygate',
-    name: 'Stoneygate',
+    name: 'Stoneygate Masterplan',
     aliases: ['Stoneygate regeneration', 'Stoneygate masterplan'],
     lat: 53.7577138, lon: -2.6964191,
     category: 'regeneration',
@@ -31,10 +31,10 @@ export const PRESTON_GAZETTEER = [
     category: 'regeneration',
   },
   {
-    id: 'city-centre-plan',
-    name: 'City Centre',
-    aliases: ['Preston city centre', 'city centre plan'],
-    lat: 53.7580980, lon: -2.7006248,
+    id: 'st-johns',
+    name: 'St John\'s',
+    aliases: ['St John\'s shopping centre', 'St John\'s redevelopment'],
+    lat: 53.76082962540588, lon: -2.6975918561862176,
     category: 'regeneration',
   },
 
@@ -91,7 +91,7 @@ export const PRESTON_GAZETTEER = [
   {
     id: 'avenham-park',
     name: 'Avenham Park',
-    aliases: ['Avenham', 'Miller Park', 'Avenham and Miller Park'],
+    aliases: ['Avenham', 'Avenham and Miller Park', 'Miller and Avenham Park'],
     lat: 53.7535, lon: -2.7000,
     category: 'landmark',
   },
@@ -109,6 +109,55 @@ export const PRESTON_GAZETTEER = [
     lat: 53.75981251025268, lon: -2.6920315553873677,
     category: 'landmark',
   },
+  {
+    id: 'preston-docks',
+    name: 'Preston Docks',
+    aliases: ['the docks', 'docks', 'Preston Docklands', 'Preston Marina', 'Bullnose', 'Preston Dock Swing Bridge'],
+    lat: 53.760924291071845, lon: -2.735625612049353,
+    category: 'landmark',
+  },
+  {
+    id: 'park-hotel',
+    name: 'Park Hotel',
+    aliases: ['the Park Hotel', 'former Park Hotel', 'demolished Park Hotel', 'old Park Hotel', 'Park Hotel site', 'Park Hotel Preston', 'Heaton Group'],
+    lat: 53.7527798939005, lon: -2.705200485024242,
+    category: 'regeneration',
+  },
+  {
+    id: 'miller-park',
+    name: 'Miller Park',
+    aliases: ['Miller', 'Avenham and Miller Park', 'Miller and Avenham Park'],
+    lat: 53.75202649437027, lon: -2.7038848135723423,
+    category: 'landmark',
+  },
+  {
+    id: 'st-josephs-orphange',
+    name: 'St Joseph\'s Orphanage',
+    aliases: ['St Joseph\'s', 'the orphanage'],
+    lat: 53.75674631237644, lon: -2.7039868911262346,
+    category: 'landmark',
+  },
+  {
+    id: 'cardinal-newman-college',
+    name: 'Cardinal Newman College',
+    aliases: ['the college', 'Cardinal Newman'],
+    lat: 53.75653805954465, lon: -2.6899086850230587,
+    category: 'landmark',
+  },
+  { 
+    id: 'altura',
+    name: 'Altura Tower',
+    aliases: ['Altura Preston', 'Altura tower', 'Altura building', 'tallest building', 'tallest tower', 'tallest building in Preston', 'Preston\'s tallest building', 'tallest tower block'],
+    lat: 53.76069845547714, lon: -2.694581567216919,
+    category: 'regeneration',
+  },
+{
+    id: 'city-centre-plan',
+    name: 'City Centre',
+    aliases: ['Preston city centre', 'city centre plan'],
+    lat: 53.7580980, lon: -2.7006248,
+    category: 'regeneration',
+  },
 
   // Streets (lower priority — match only if no landmark match found)
   { id: 'fishergate', name: 'Fishergate', aliases: [], lat: 53.75761986983696, lon: -2.704416276171275, category: 'street' },
@@ -118,6 +167,14 @@ export const PRESTON_GAZETTEER = [
   { id: 'ringway', name: 'Ringway', aliases: ['the Ringway'], lat: 53.76086581171621, lon: -2.701686202280124, category: 'street' },
   { id: 'fox-street', name: 'Fox Street', aliases: [], lat: 53.75833134428736, lon: -2.703688115773532, category: 'street' },
   { id: 'cheapside', name: 'Cheapside', aliases: [], lat: 53.758832128698735, lon: -2.6993016446090734, category: 'street' },
+  { id: 'derby-street', name: 'Derby Street', aliases: [], lat: 53.76069845547714, lon: -2.694581567216919, category: 'street' },
+  { id: 'herschell-street', name: 'Herschell Street', aliases: [], lat: 53.75506203580382, lon: -2.6908103929983045, category: 'street' },
+  { id: 'deepdale-road', name: 'Deepdale Road', aliases: [], lat: 53.76660617369628, lon: -2.6916804022798444, category: 'street' },
+  { id: 'watling-street-road', name: 'Watling Street Road', aliases: [], lat: 53.77834160605469, lon: -2.682249545710094, category: 'street' },
+  { id: 'new-hall-lane', name: 'New Hall Lane', aliases: [], lat: 53.764751295290864, lon: -2.671510156804153, category: 'street' },
+  { id: 'blackpool-road', name: 'Blackpool Road', aliases: [], lat: 53.76819607889435, lon: -2.756378839061908, category: 'street' },
+  { id: 'broadgate', name: 'Broadgate', aliases: [], lat: 53.75134522679838, lon: -2.7159862562538297, category: 'street' },
+  { id: 'queen-street', name: 'Queen Street', aliases: [], lat: 53.758963711036316, lon: -2.693367640911167, category: 'street' },
 ];
 
 // Regeneration-relevant terms with weights. Used for scoring articles.
