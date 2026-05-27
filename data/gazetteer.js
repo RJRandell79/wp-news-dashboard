@@ -182,26 +182,23 @@ export const PRESTON_GAZETTEER = [
   { id: 'blackpool-road', name: 'Blackpool Road', aliases: [], lat: 53.76819607889435, lon: -2.756378839061908, category: 'street' },
   { id: 'broadgate', name: 'Broadgate', aliases: [], lat: 53.75134522679838, lon: -2.7159862562538297, category: 'street' },
   { id: 'queen-street', name: 'Queen Street', aliases: [], lat: 53.758963711036316, lon: -2.693367640911167, category: 'street' },
+  { id: 'fylde-road', name: 'Fylde Road', aliases: [], lat: 53.764880397756095, lon: -2.7153101961822457, category: 'street' },
 ];
 
 // Articles whose titles contain any of these are excluded regardless of regen score.
 export const NEGATIVE_KEYWORDS = [
   // Road / traffic
-  'speed limit', 'speed camera', 'speed bump', 'speed humps',
-  'bus gate', 'bus lane',
-  'road closure', 'road scheme', 'road works', 'roadworks',
-  'pothole', 'potholes',
-  'traffic light', 'traffic lights', 'traffic calming',
-  'cycle lane', 'cycle path',
+  'speed limit', 'speed camera', 'speed bump', 'speed humps', 'bus gate', 'bus lane', 'road closure', 'road scheme', 'road works', 'roadworks', 'pothole', 'potholes', 'traffic light', 'traffic lights', 'traffic calming', 'cycle lane', 'cycle path',
   // Crime / incidents
-  'stabbing', 'shooting', 'assault', 'murder', 'arson',
-  'drug', 'drugs',
+  'stabbing', 'shooting', 'assault', 'murder', 'arson', 'drug', 'drugs', 'covid', 'coronavirus', 'covid-19',
   // Sport / events (unless tied to venue development)
   'preston north end', 'match report', 'fixtures', 'transfer',
   // Parking / fines
   'parking fine', 'parking fines', 'parking ticket',
   // Preston Culture / Events
-  'festivals', 'encounter festival', 'caribbean festival', 'carnivals', 'carnival', 'egg-rolling'
+  'festivals', 'encounter festival', 'caribbean festival', 'carnivals', 'carnival', 'egg-rolling', 'festival', 'music in the park', 'bluestreak arts', 
+  // Support 
+  'household support fund', 'ukraine', 'ukrainian', 'afghanistan', 'refugee', 'afghan'
 ];
 
 // Regeneration-relevant terms with weights. Used for scoring articles.
