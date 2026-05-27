@@ -22,15 +22,37 @@
     }
     #post-list { flex: 1; overflow-y: auto; }
 
+    /* Category section headers */
+    .cat-section { border-bottom: 2px solid #e0e0e0; }
+    .cat-section-header {
+      padding: 10px 16px; cursor: pointer;
+      display: flex; align-items: center; gap: 8px;
+      background: #f0f0f0; user-select: none;
+      transition: background .15s;
+    }
+    .cat-section-header:hover { background: #e8e8e8; }
+    .cat-section-label {
+      flex: 1; font-size: 12px; font-weight: 700;
+      letter-spacing: .04em; text-transform: uppercase; color: #444;
+    }
+    .cat-section-count {
+      font-size: 11px; font-weight: 600; color: #fff;
+      border-radius: 10px; padding: 1px 7px; flex-shrink: 0;
+    }
+    .cat-section-chevron { font-size: 9px; color: #999; transition: transform .2s; flex-shrink: 0; }
+    .cat-section-header.open .cat-section-chevron { transform: rotate(90deg); }
+    .cat-section-body { display: none; }
+    .cat-section-body.open { display: block; }
+
     /* Location rows */
     .loc-item { border-bottom: 1px solid #ececec; }
     .loc-header {
-      padding: 11px 16px; cursor: pointer;
+      padding: 10px 16px 10px 24px; cursor: pointer;
       display: flex; align-items: center; gap: 8px;
       transition: background .15s;
     }
     .loc-header:hover  { background: #f0f0f0; }
-    .loc-header.active { background: #fdecea; border-left: 3px solid #e74c3c; padding-left: 13px; }
+    .loc-header.active { background: #fdecea; border-left: 3px solid #e74c3c; padding-left: 21px; }
     .loc-name  { flex: 1; font-size: 13px; font-weight: 500; color: #222; line-height: 1.4; }
     .loc-count {
       font-size: 11px; font-weight: 600; color: #fff;
@@ -43,7 +65,7 @@
     .article-list { display: none; border-top: 1px solid #ececec; }
     .article-list.open { display: block; }
     .article-list a {
-      display: block; padding: 8px 16px 8px 30px;
+      display: block; padding: 8px 16px 8px 36px;
       font-size: 12px; color: #444; text-decoration: none;
       border-bottom: 1px solid #f0f0f0; line-height: 1.4;
     }
@@ -51,7 +73,7 @@
     .article-list a:hover { background: #f0f0f0; color: #111; }
     .article-date { font-size: 11px; color: #aaa; margin-top: 2px; }
 
-    /* Dot used in both sidebar and legend */
+    /* Shared dot */
     .cat-dot {
       display: inline-block; width: 8px; height: 8px;
       border-radius: 50%; flex-shrink: 0;
@@ -106,6 +128,13 @@
       landmark:     '#3498db',
       area:         '#27ae60',
     };
+    const CATEGORY_LABELS = {
+      regeneration: 'Regeneration',
+      proposed:     'Proposed',
+      landmark:     'Landmark',
+      area:         'Area',
+    };
+    const CATEGORY_ORDER = ['regeneration', 'proposed', 'landmark', 'area'];
 
     let activePopup  = null;
     let activeHeader = null;
@@ -129,45 +158,85 @@
 
         document.getElementById('loc-count').textContent = `(${geojson.features.length})`;
 
-        // Build sidebar
+        // Group features by category, preserving original index for map lookups
+        const grouped = {};
+        CATEGORY_ORDER.forEach(c => grouped[c] = []);
         geojson.features.forEach((f, i) => {
-          const { location, category, count, articles: articlesJson } = f.properties;
-          const articles = JSON.parse(articlesJson);
-          const colour   = CATEGORY_COLOURS[category] ?? '#999';
+          const cat = f.properties.category;
+          if (grouped[cat]) grouped[cat].push({ f, i });
+        });
 
-          const item = document.createElement('div');
-          item.className = 'loc-item';
-          item.dataset.index = i;
+        // Build collapsible category sections
+        CATEGORY_ORDER.forEach(cat => {
+          const items = grouped[cat];
+          if (!items.length) return;
 
-          const header = document.createElement('div');
-          header.className = 'loc-header';
-          header.innerHTML = `
+          const colour = CATEGORY_COLOURS[cat];
+
+          const totalArticles = items.reduce((sum, { f }) => sum + f.properties.count, 0);
+
+          const section = document.createElement('div');
+          section.className = 'cat-section';
+
+          const sectionHeader = document.createElement('div');
+          sectionHeader.className = 'cat-section-header open';
+          sectionHeader.innerHTML = `
             <span class="cat-dot" style="background:${colour}"></span>
-            <span class="loc-name">${location}</span>
-            <span class="loc-count" style="background:${colour}">${count}</span>
-            <span class="loc-chevron">&#9654;</span>`;
+            <span class="cat-section-label">${CATEGORY_LABELS[cat]}</span>
+            <span class="cat-section-count" style="background:${colour}">${totalArticles}</span>
+            <span class="cat-section-chevron">&#9654;</span>`;
 
-          const articleList = document.createElement('div');
-          articleList.className = 'article-list';
-          articles.forEach(a => {
-            const link = document.createElement('a');
-            link.href = a.link;
-            link.target = '_blank';
-            link.rel = 'noopener noreferrer';
-            link.innerHTML = `${a.title}<div class="article-date">${a.date.slice(0, 10)}</div>`;
-            articleList.appendChild(link);
+          const sectionBody = document.createElement('div');
+          sectionBody.className = 'cat-section-body open';
+
+          sectionHeader.addEventListener('click', () => {
+            const opening = !sectionBody.classList.contains('open');
+            sectionBody.classList.toggle('open', opening);
+            sectionHeader.classList.toggle('open', opening);
           });
 
-          header.addEventListener('click', () => {
-            const opening = !articleList.classList.contains('open');
-            articleList.classList.toggle('open', opening);
-            header.classList.toggle('open', opening);
-            flyTo(map, f, header);
+          // Build location rows inside this section
+          items.forEach(({ f, i }) => {
+            const { location, category, count, articles: articlesJson } = f.properties;
+            const articles = JSON.parse(articlesJson);
+
+            const item = document.createElement('div');
+            item.className = 'loc-item';
+            item.dataset.index = i;
+
+            const header = document.createElement('div');
+            header.className = 'loc-header';
+            header.innerHTML = `
+              <span class="loc-name">${location}</span>
+              <span class="loc-count" style="background:${colour}">${count}</span>
+              <span class="loc-chevron">&#9654;</span>`;
+
+            const articleList = document.createElement('div');
+            articleList.className = 'article-list';
+            articles.forEach(a => {
+              const link = document.createElement('a');
+              link.href = a.link;
+              link.target = '_blank';
+              link.rel = 'noopener noreferrer';
+              link.innerHTML = `${a.title}<div class="article-date">${a.date.slice(0, 10)}</div>`;
+              articleList.appendChild(link);
+            });
+
+            header.addEventListener('click', () => {
+              const opening = !articleList.classList.contains('open');
+              articleList.classList.toggle('open', opening);
+              header.classList.toggle('open', opening);
+              flyTo(map, f, header, sectionHeader, sectionBody);
+            });
+
+            item.appendChild(header);
+            item.appendChild(articleList);
+            sectionBody.appendChild(item);
           });
 
-          item.appendChild(header);
-          item.appendChild(articleList);
-          list.appendChild(item);
+          section.appendChild(sectionHeader);
+          section.appendChild(sectionBody);
+          list.appendChild(section);
         });
 
         // Map layers
@@ -200,7 +269,6 @@
           source: 'posts',
           filter: ['!', ['has', 'point_count']],
           paint: {
-            // Radius scales with article count: 1 article → 7px, 10 → 13px, 20+ → 17px
             'circle-radius': ['interpolate', ['linear'], ['get', 'count'], 1, 7, 10, 13, 20, 17],
             'circle-color': [
               'match', ['get', 'category'],
@@ -218,8 +286,12 @@
         map.on('click', 'posts-circles', e => {
           const props = e.features[0].properties;
           const idx   = geojson.features.findIndex(f => f.properties.location === props.location);
-          const headerEl = list.querySelector(`[data-index="${idx}"] .loc-header`);
-          flyTo(map, geojson.features[idx], headerEl);
+          const item  = list.querySelector(`[data-index="${idx}"]`);
+          if (!item) return;
+          const headerEl      = item.querySelector('.loc-header');
+          const sectionBody   = item.closest('.cat-section-body');
+          const sectionHeader = item.closest('.cat-section')?.querySelector('.cat-section-header');
+          flyTo(map, geojson.features[idx], headerEl, sectionHeader, sectionBody);
         });
 
         map.on('click', 'clusters', e => {
@@ -236,13 +308,19 @@
       });
     }
 
-    function flyTo(map, feature, headerEl) {
+    function flyTo(map, feature, headerEl, sectionHeader, sectionBody) {
       const { location, articles: articlesJson } = feature.properties;
       const articles = JSON.parse(articlesJson);
       const coords   = feature.geometry.coordinates;
 
       if (activePopup)  activePopup.remove();
       if (activeHeader) activeHeader.classList.remove('active');
+
+      // Ensure the category section is expanded
+      if (sectionBody && !sectionBody.classList.contains('open')) {
+        sectionBody.classList.add('open');
+        sectionHeader?.classList.add('open');
+      }
 
       map.flyTo({ center: coords, zoom: Math.max(map.getZoom(), 15), speed: 1.4 });
 
