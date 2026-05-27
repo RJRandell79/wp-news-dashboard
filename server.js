@@ -31,10 +31,24 @@ app.get('/posts', (req, res) => {
 });
 
 function matchGazetteer(post) {
-  const text = `${post.title} ${post.content}`.toLowerCase();
-  for (const entry of PRESTON_GAZETTEER) {
-    const terms = [entry.name, ...entry.aliases].map(t => t.toLowerCase());
-    if (terms.some(t => text.includes(t))) return entry;
+  const title = post.title.toLowerCase();
+  const full  = `${post.title} ${post.content}`.toLowerCase();
+
+  // Try title first — the subject of the article is almost always named there.
+  // Only fall back to full content if the title has no gazetteer match.
+  for (const scope of [title, full]) {
+    let best = null;
+    let bestLen = 0;
+    for (const entry of PRESTON_GAZETTEER) {
+      for (const term of [entry.name, ...entry.aliases]) {
+        const t = term.toLowerCase();
+        if (t.length > bestLen && scope.includes(t)) {
+          best = entry;
+          bestLen = t.length;
+        }
+      }
+    }
+    if (best) return best;
   }
   return null;
 }
