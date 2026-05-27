@@ -3,12 +3,14 @@ import express from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import db from './db.js';
+import { PRESTON_GAZETTEER } from './data/gazetteer.js';
 
 const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer);
 
 app.use(express.json());
+app.use(express.static('public'));
 
 // List posts — supports ?page=1&limit=20&search=
 app.get('/posts', (req, res) => {
@@ -27,7 +29,34 @@ app.get('/posts', (req, res) => {
   res.json({ total, page: req.query.page ?? 1, limit, posts: rows });
 });
 
-// Single post by ID
+function matchGazetteer(post) {
+  const text = `${post.title} ${post.content}`.toLowerCase();
+  for (const entry of PRESTON_GAZETTEER) {
+    const terms = [entry.name, ...entry.aliases].map(t => t.toLowerCase());
+    if (terms.some(t => text.includes(t))) return entry;
+  }
+  return null;
+}
+
+app.get('/posts/geo', (req, res) => {
+  const posts = db.prepare('SELECT id, title, link, excerpt FROM posts ORDER BY date DESC').all();
+  const features = posts.flatMap(post => {
+    const match = matchGazetteer(post);
+    if (!match) return [];
+    return [{
+      type: 'Feature',
+      geometry: { type: 'Point', coordinates: [match.lon, match.lat] },
+      properties: { id: post.id, title: post.title, link: post.link, location: match.name, category: match.category },
+    }];
+  });
+  res.json({ type: 'FeatureCollection', features });
+});
+
+app.get('/map', (req, res) => {
+  res.json({ accessToken: process.env.MAPBOX_ACCESS_TOKEN });
+});
+
+// Single post by ID — must come after /posts/geo to avoid catching "geo" as an id
 app.get('/posts/:id', (req, res) => {
   const post = db.prepare('SELECT * FROM posts WHERE id = ?').get(req.params.id);
   if (!post) return res.status(404).json({ error: 'Not found' });

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Preston Regeneration Map</title>
+  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <link href="https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.css" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; }
+    #map { position: absolute; inset: 0; }
+    .mapboxgl-popup-content a { color: #e74c3c; }
+    #legend {
+      position: absolute; bottom: 32px; left: 12px; z-index: 1;
+      background: #fff; border-radius: 6px; padding: 10px 14px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.2); font-size: 13px; line-height: 2;
+    }
+    .legend-dot {
+      display: inline-block; width: 10px; height: 10px;
+      border-radius: 50%; margin-right: 6px; vertical-align: middle;
+    }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+  <div id="legend">
+    <span class="legend-dot" style="background:#e74c3c"></span>Regeneration<br>
+    <span class="legend-dot" style="background:#3498db"></span>Landmark<br>
+    <span class="legend-dot" style="background:#95a5a6"></span>Street
+  </div>
+
+  <script src="https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.js"></script>
+  <script>
+    async function init() {
+      const { accessToken } = await fetch('/map').then(r => r.json());
+      mapboxgl.accessToken = accessToken;
+
+      const map = new mapboxgl.Map({
+        container: 'map',
+        style: 'mapbox://styles/mapbox/light-v11',
+        center: [-2.7038, 53.7589],
+        zoom: 14,
+      });
+
+      map.addControl(new mapboxgl.NavigationControl(), 'top-right');
+
+      map.on('load', async () => {
+        const geojson = await fetch('/posts/geo').then(r => r.json());
+
+        map.addSource('posts', { type: 'geojson', data: geojson, cluster: true, clusterMaxZoom: 14 });
+
+        map.addLayer({
+          id: 'clusters',
+          type: 'circle',
+          source: 'posts',
+          filter: ['has', 'point_count'],
+          paint: {
+            'circle-color': '#e74c3c',
+            'circle-radius': ['step', ['get', 'point_count'], 16, 5, 22, 20, 28],
+            'circle-opacity': 0.7,
+          },
+        });
+
+        map.addLayer({
+          id: 'cluster-count',
+          type: 'symbol',
+          source: 'posts',
+          filter: ['has', 'point_count'],
+          layout: { 'text-field': '{point_count_abbreviated}', 'text-size': 12 },
+          paint: { 'text-color': '#fff' },
+        });
+
+        map.addLayer({
+          id: 'posts-circles',
+          type: 'circle',
+          source: 'posts',
+          filter: ['!', ['has', 'point_count']],
+          paint: {
+            'circle-radius': 8,
+            'circle-color': [
+              'match', ['get', 'category'],
+              'regeneration', '#e74c3c',
+              'landmark',    '#3498db',
+              'street',      '#95a5a6',
+              '#999',
+            ],
+            'circle-stroke-width': 2,
+            'circle-stroke-color': '#fff',
+          },
+        });
+
+        map.on('click', 'posts-circles', e => {
+          const { title, link, location } = e.features[0].properties;
+          new mapboxgl.Popup({ maxWidth: '280px' })
+            .setLngLat(e.lngLat)
+            .setHTML(`<strong>${title}</strong><br><em>${location}</em><br><a href="${link}" target="_blank">Read more →</a>`)
+            .addTo(map);
+        });
+
+        map.on('click', 'clusters', e => {
+          const [feature] = map.queryRenderedFeatures(e.point, { layers: ['clusters'] });
+          map.getSource('posts').getClusterExpansionZoom(feature.properties.cluster_id, (err, zoom) => {
+            if (!err) map.easeTo({ center: feature.geometry.coordinates, zoom });
+          });
+        });
+
+        map.on('mouseenter', 'posts-circles', () => map.getCanvas().style.cursor = 'pointer');
+        map.on('mouseleave', 'posts-circles', () => map.getCanvas().style.cursor = '');
+        map.on('mouseenter', 'clusters',      () => map.getCanvas().style.cursor = 'pointer');
+        map.on('mouseleave', 'clusters',      () => map.getCanvas().style.cursor = '');
+      });
+    }
+
+    init();
+  </script>
+</body>
+</html>
