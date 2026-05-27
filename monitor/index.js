@@ -30,11 +30,11 @@ function getJSON(url) {
 function upsertPosts(posts) {
   const stmt = db.prepare(`
     INSERT INTO posts (id, title, slug, date, link, excerpt, content, thumbnail, categories, tags, synced_at)
-    VALUES (@id, @title, @slug, @date, @link, @excerpt, @content, null, @categories, @tags, @synced_at)
+    VALUES (@id, @title, @slug, @date, @link, @excerpt, @content, @thumbnail, @categories, @tags, @synced_at)
     ON CONFLICT(id) DO UPDATE SET
       title=excluded.title, slug=excluded.slug, date=excluded.date,
       link=excluded.link, excerpt=excluded.excerpt, content=excluded.content,
-      thumbnail=null, categories=excluded.categories,
+      thumbnail=excluded.thumbnail, categories=excluded.categories,
       tags=excluded.tags, synced_at=excluded.synced_at
   `);
 
@@ -72,7 +72,7 @@ async function syncPosts() {
   let totalSynced = 0;
 
   do {
-    const res = await getJSON(`${BASE_URL}/posts?per_page=100&page=${page}${after}`);
+    const res = await getJSON(`${BASE_URL}/posts?per_page=100&page=${page}&_embed=wp:featuredmedia${after}`);
     if (!res.ok) throw new Error(`WP API error: ${res.status}`);
 
     totalPages = parseInt(res.headers['x-wp-totalpages'] ?? '1', 10);
