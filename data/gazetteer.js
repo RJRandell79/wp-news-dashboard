@@ -151,7 +151,14 @@ export const PRESTON_GAZETTEER = [
     lat: 53.76069845547714, lon: -2.694581567216919,
     category: 'regeneration',
   },
-{
+  {
+    id: 'cuerdale-garden-village',
+    name: 'Cuerdale Garden Village',
+    aliases: ['Cuerdale Garden Village development', 'Cuerdale Garden Village scheme', 'Cuerdale Garden Village proposal'],
+    lat: 53.75675186228656, lon: -2.623151281858694,
+    category: 'proposed',
+  },
+  {
     id: 'city-centre-plan',
     name: 'City Centre',
     aliases: ['Preston city centre', 'city centre plan'],
