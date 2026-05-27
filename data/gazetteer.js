@@ -71,14 +71,14 @@ export const PRESTON_GAZETTEER = [
     id: 'bus-station',
     name: 'Preston Bus Station',
     aliases: ['the bus station', 'Brutalist bus station'],
-    lat: 53.7605, lon: -2.7008,
+    lat: 53.761238838393524, lon: -2.6961956734445343,
     category: 'landmark',
   },
   {
     id: 'preston-station',
     name: 'Preston Railway Station',
     aliases: ['Preston station', 'railway station'],
-    lat: 53.76114775391008, lon: -2.696213553330682,
+    lat: 53.75622432997201, lon: -2.7064721976825203,
     category: 'landmark',
   },
   {
@@ -166,7 +166,21 @@ export const PRESTON_GAZETTEER = [
     category: 'regeneration',
   },
 
-  // Streets (lower priority — match only if no landmark match found)
+  // Areas & districts — city neighbourhoods and outlying towns
+  { id: 'fulwood', name: 'Fulwood', aliases: ['Fulwood area', 'Fulwood district'], lat: 53.7736, lon: -2.7094, category: 'area' },
+  { id: 'ribbleton', name: 'Ribbleton', aliases: ['Ribbleton area', 'Ribbleton Avenue'], lat: 53.7637, lon: -2.6786, category: 'area' },
+  { id: 'ashton', name: 'Ashton-on-Ribble', aliases: ['Ashton', 'Ashton district'], lat: 53.7565, lon: -2.7290, category: 'area' },
+  { id: 'ingol', name: 'Ingol', aliases: ['Ingol area', 'Tanterton', 'Ingol and Tanterton'], lat: 53.7769, lon: -2.7298, category: 'area' },
+  { id: 'larches', name: 'Larches', aliases: ['the Larches', 'Larches estate', 'Lea'], lat: 53.7644, lon: -2.7267, category: 'area' },
+  { id: 'plungington', name: 'Plungington', aliases: ['Plungington area', 'Plungington Road area'], lat: 53.7686, lon: -2.7183, category: 'area' },
+  { id: 'deepdale', name: 'Deepdale', aliases: ['Deepdale area', 'Deepdale district'], lat: 53.7661, lon: -2.6792, category: 'area' },
+  { id: 'penwortham', name: 'Penwortham', aliases: ['Penwortham area', 'Penwortham district', 'Higher Penwortham', 'Lower Penwortham'], lat: 53.7440, lon: -2.7173, category: 'area' },
+  { id: 'walton-le-dale', name: 'Walton-le-Dale', aliases: ['Walton', 'Walton le Dale', 'Bamber Bridge'], lat: 53.7427, lon: -2.6650, category: 'area' },
+  { id: 'longridge', name: 'Longridge', aliases: ['Longridge town', 'Longridge area'], lat: 53.8237, lon: -2.6010, category: 'area' },
+  { id: 'leyland', name: 'Leyland', aliases: ['Leyland town', 'Leyland area', 'South Ribble'], lat: 53.6929, lon: -2.6896, category: 'area' },
+  { id: 'chorley', name: 'Chorley', aliases: ['Chorley town', 'Chorley area'], lat: 53.6524, lon: -2.6324, category: 'area' },
+
+  // Streets (excluded from map markers — used for text matching only)
   { id: 'fishergate', name: 'Fishergate', aliases: [], lat: 53.75761986983696, lon: -2.704416276171275, category: 'street' },
   { id: 'friargate', name: 'Friargate', aliases: [], lat: 53.760393427284356, lon: -2.703526602280143, category: 'street' },
   { id: 'church-street', name: 'Church Street', aliases: [], lat: 53.75985812586067, lon: -2.693367640911167, category: 'street' },

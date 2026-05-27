@@ -73,7 +73,7 @@ app.get('/posts/geo', (req, res) => {
     if (regenScore(post) < MIN_REGEN_SCORE) continue;
     if (hasNegativeSignal(post)) continue;
     const match = matchGazetteer(post);
-    if (!match) continue;
+    if (!match || match.category === 'street') continue;
     if (!locationMap.has(match.id)) locationMap.set(match.id, { entry: match, articles: [] });
     locationMap.get(match.id).articles.push({ id: post.id, title: post.title, link: post.link, date: post.date });
   }
