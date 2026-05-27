@@ -201,8 +201,8 @@ export const PRESTON_GAZETTEER = [
 
 // Articles whose titles contain any of these are excluded regardless of regen score.
 export const NEGATIVE_KEYWORDS = [
-  // Road / traffic
-  'speed limit', 'speed camera', 'speed bump', 'speed humps', 'bus gate', 'bus lane', 'road closure', 'road scheme', 'road works', 'roadworks', 'pothole', 'potholes', 'traffic light', 'traffic lights', 'traffic calming', 'cycle lane', 'cycle path',
+  // Road / traffic / Rail
+  'speed limit', 'speed camera', 'speed bump', 'speed humps', 'bus gate', 'bus lane', 'road closure', 'road scheme', 'road works', 'roadworks', 'pothole', 'potholes', 'traffic light', 'traffic lights', 'traffic calming', 'cycle lane', 'cycle path', 'hs2', 'rail replacement', 'railway works', 'train delay', 'train cancelled', 'rail disruption', 'rail strike', 'bus strike',
   // Crime / incidents
   'stabbing', 'shooting', 'assault', 'murder', 'arson', 'drug', 'drugs', 'covid', 'coronavirus', 'covid-19',
   // Sport / events (unless tied to venue development)
