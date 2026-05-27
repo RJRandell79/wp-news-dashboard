@@ -177,6 +177,26 @@ export const PRESTON_GAZETTEER = [
   { id: 'queen-street', name: 'Queen Street', aliases: [], lat: 53.758963711036316, lon: -2.693367640911167, category: 'street' },
 ];
 
+// Articles whose titles contain any of these are excluded regardless of regen score.
+export const NEGATIVE_KEYWORDS = [
+  // Road / traffic
+  'speed limit', 'speed camera', 'speed bump', 'speed humps',
+  'bus gate', 'bus lane',
+  'road closure', 'road scheme', 'road works', 'roadworks',
+  'pothole', 'potholes',
+  'traffic light', 'traffic lights', 'traffic calming',
+  'cycle lane', 'cycle path',
+  // Crime / incidents
+  'stabbing', 'shooting', 'assault', 'murder', 'arson',
+  'drug', 'drugs',
+  // Sport / events (unless tied to venue development)
+  'preston north end', 'match report', 'fixtures', 'transfer',
+  // Parking / fines
+  'parking fine', 'parking fines', 'parking ticket',
+  // Preston Culture / Events
+  'festivals', 'encounter festival', 'caribbean festival', 'carnivals', 'carnival', 'egg-rolling'
+];
+
 // Regeneration-relevant terms with weights. Used for scoring articles.
 // Higher weight = more strongly indicates a regeneration story.
 export const REGEN_KEYWORDS = {

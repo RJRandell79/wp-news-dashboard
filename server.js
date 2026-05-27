@@ -3,7 +3,7 @@ import express from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import db from './db.js';
-import { PRESTON_GAZETTEER, REGEN_KEYWORDS } from './data/gazetteer.js';
+import { PRESTON_GAZETTEER, REGEN_KEYWORDS, NEGATIVE_KEYWORDS } from './data/gazetteer.js';
 
 const app = express();
 const httpServer = createServer(app);
@@ -53,6 +53,11 @@ function matchGazetteer(post) {
   return null;
 }
 
+function hasNegativeSignal(post) {
+  const title = post.title.toLowerCase();
+  return NEGATIVE_KEYWORDS.some(k => title.includes(k));
+}
+
 function regenScore(post) {
   const text = `${post.title} ${post.excerpt}`.toLowerCase();
   return Object.entries(REGEN_KEYWORDS).reduce(
@@ -64,6 +69,7 @@ app.get('/posts/geo', (req, res) => {
   const posts = db.prepare('SELECT id, title, link, excerpt, content FROM posts ORDER BY date DESC').all();
   const features = posts.flatMap(post => {
     if (regenScore(post) < MIN_REGEN_SCORE) return [];
+    if (hasNegativeSignal(post)) return [];
     const match = matchGazetteer(post);
     if (!match) return [];
     return [{
