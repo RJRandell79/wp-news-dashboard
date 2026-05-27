@@ -1,4 +1,4 @@
-# WP Planning
+# WP News Dashboard
 
 A Node.js service that periodically fetches posts from a WordPress REST API, caches them in a local SQLite database, and exposes them via an Express HTTP API with Socket.io support.
 
