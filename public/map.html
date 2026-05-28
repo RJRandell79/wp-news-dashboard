@@ -302,6 +302,11 @@
         currentGeojson = await res.json();
         buildSidebar(currentGeojson, list, map);
         map.getSource('posts')?.setData(currentGeojson);
+        if (currentGeojson.features.length) {
+          const bounds = new mapboxgl.LngLatBounds();
+          currentGeojson.features.forEach(f => bounds.extend(f.geometry.coordinates));
+          map.fitBounds(bounds, { padding: 60, maxZoom: 15 });
+        }
       } catch (err) {
         locCount.textContent = '(error)';
         console.error('[refresh] failed:', err);
@@ -315,8 +320,8 @@
       const map = new mapboxgl.Map({
         container: 'map',
         style: 'mapbox://styles/mapbox/light-v11',
-        center: [-2.7038, 53.7589],
-        zoom: 14,
+        center: [-2.7038, 53.7589], // fallback — overridden by fitBounds once data loads
+        zoom: 12,
       });
 
       map.addControl(new mapboxgl.NavigationControl(), 'top-right');
@@ -327,6 +332,12 @@
         // Initial load
         currentGeojson = await fetch('/posts/geo').then(r => r.json());
         buildSidebar(currentGeojson, list, map);
+
+        if (currentGeojson.features.length) {
+          const bounds = new mapboxgl.LngLatBounds();
+          currentGeojson.features.forEach(f => bounds.extend(f.geometry.coordinates));
+          map.fitBounds(bounds, { padding: 60, maxZoom: 15 });
+        }
 
         map.addSource('posts', { type: 'geojson', data: currentGeojson, cluster: true, clusterMaxZoom: 13 });
 
