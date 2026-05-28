@@ -5,14 +5,21 @@ export const PRESTON_GAZETTEER = [
   {
     id: 'animate',
     name: 'Animate',
-    aliases: ['Animate Preston', 'Animate scheme', 'former indoor market', 'Animate leisure'],
+    aliases: ['Animate Preston', 'Animate scheme', 'former indoor market', 'Animate leisure', 'indoor market'],
     lat: 53.7610901, lon: -2.7008463,
     category: 'regeneration',
   },
   {
+    id: 'miller-arcade',
+    name: 'Miller Arcade',
+    aliases: ['Miller Arcade redevelopment', 'Miller Arcade regeneration', 'former Miller Arcade'],
+    lat: 53.75874685753695, lon: -2.698063298655689,
+    category: 'landmark',
+  },
+  {
     id: 'stoneygate',
     name: 'Stoneygate Masterplan',
-    aliases: ['Stoneygate regeneration', 'Stoneygate masterplan'],
+    aliases: ['Stoneygate regeneration', 'Stoneygate masterplan', 'stoneygate redevelopment', 'stoneygate scheme', 'stoneygate development'],
     lat: 53.7577138, lon: -2.6964191,
     category: 'regeneration',
   },
@@ -42,7 +49,7 @@ export const PRESTON_GAZETTEER = [
   {
     id: 'harris',
     name: 'Harris Museum',
-    aliases: ['Harris Museum and Art Gallery', 'the Harris', 'Harris Library'],
+    aliases: ['Harris Museum and Art Gallery', 'the Harris', 'Harris Library', 'Harris Museum redevelopment', 'Harris refurbishment', 'friends of the Harris'],
     lat: 53.7591, lon: -2.7028,
     category: 'landmark',
   },
@@ -84,8 +91,15 @@ export const PRESTON_GAZETTEER = [
   {
     id: 'markets',
     name: 'Preston Markets',
-    aliases: ['the markets', 'covered market', 'box market', 'outdoor market'],
-    lat: 53.76036349245426, lon: -2.6998056190909985,
+    aliases: ['the markets', 'covered market', 'box market', 'outdoor market', 'preston fish market'],
+    lat: 53.760579074328916, lon: -2.6992711605191424,
+    category: 'landmark',
+  },
+  {
+    id: 'preston-market-hall',
+    name: 'Preston Market Hall',
+    aliases: ['the Market Hall', 'former Market Hall', 'old Market Hall'],
+    lat: 53.760457675726364, lon: -2.700090352547335,
     category: 'landmark',
   },
   {
@@ -98,7 +112,7 @@ export const PRESTON_GAZETTEER = [
   {
     id: 'uclan',
     name: 'UCLan',
-    aliases: ['University of Central Lancashire', 'UCLan campus', 'student centre'],
+    aliases: ['University of Central Lancashire', 'UCLan campus', 'student centre', 'university square', 'adelphi square', 'uclan masterplan', 'uclan\'s masterplan', 'uclan development', 'uclan regeneration', 'adelphi roundabout masterplan', 'adelphi roundabout development', 'adelphi roundabout regeneration'],
     lat: 53.76166962053733, lon: -2.708478545051091,
     category: 'landmark',
   },
@@ -112,7 +126,7 @@ export const PRESTON_GAZETTEER = [
   {
     id: 'preston-docks',
     name: 'Preston Docks',
-    aliases: ['the docks', 'docks', 'Preston Docklands', 'Preston Marina', 'Bullnose', 'Preston Dock Swing Bridge'],
+    aliases: ['the docks', 'docks', 'dockside', 'Preston Docklands', 'Preston Marina', 'Bullnose', 'Preston Dock Swing Bridge'],
     lat: 53.760924291071845, lon: -2.735625612049353,
     category: 'landmark',
   },
@@ -152,11 +166,102 @@ export const PRESTON_GAZETTEER = [
     category: 'regeneration',
   },
   {
-    id: 'cuerdale-garden-village',
-    name: 'Cuerdale Garden Village',
-    aliases: ['Cuerdale Garden Village development', 'Cuerdale Garden Village scheme', 'Cuerdale Garden Village proposal'],
-    lat: 53.75675186228656, lon: -2.623151281858694,
-    category: 'proposed',
+    id: 'shankly-hotel',
+    name: 'Shankly Hotel',
+    aliases: ['the Shankly Hotel', 'Shankly Hotel Preston', 'Shankly Preston'],
+    lat: 53.75984123763567, lon: -2.6995785669133947,
+    category: 'landmark',
+  },
+  {
+    id: 'moor-park',
+    name: 'Moor Park',
+    aliases: ['Moor Park Preston', 'Moor Park development', 'Moor Park regeneration'],
+    lat: 53.77308682394742, lon: -2.699367197667439,
+    category: 'landmark',
+  },
+  {
+    id: 'tithebarn-pub',
+    name: 'Tithebarn Pub',
+    aliases: ['the Tithebarn Pub', 'Tithebarn Pub Preston', 'former Tithebarn Pub' ,'tithebarn pub redevelopment', 'tithebarn pub regeneration', 'tithebarn demolition'],
+    lat: 53.760234378128764, lon: -2.696821947647446,
+    category: 'landmark',
+  },
+  {
+    id: 'amounderness-house',
+    name: 'Amounderness House',
+    aliases: ['Amounderness House office block', 'former Amounderness House'],
+    lat: 53.7602755771659, lon: -2.69887160908959,
+    category: 'regeneration',
+  },
+  {
+    id: 'preston-college',
+    name: 'Preston College',
+    aliases: ['the college', 'Preston College campus', 'Preston College development', 'Preston college\'s'],
+    lat: 53.78504232128462, lon: -2.699885315587157,
+    category: 'landmark',
+  },
+  {
+    id: 'preston-youth-zone',
+    name: 'Preston Youth Zone',
+    aliases: ['the Youth Zone', 'Preston Youth Zone development', 'Preston Youth Zone regeneration'],
+    lat: 53.760395749745875, lon: -2.6970998725094493,
+    category: 'regeneration',
+  },
+  {
+    id: 'the-tram-bridge',
+    name: 'The Tram Bridge',
+    aliases: ['the tram bridge', 'Preston tram bridge', 'tram bridge development', 'tram bridge regeneration', 'old tram bridge', 'former tram bridge'],
+    lat: 53.75128021115543, lon: -2.702465058860313,
+    category: 'landmark',
+  },
+  {
+    id: 'richmond-house',
+    name: 'Richmond House',
+    aliases: ['Richmond House tower block', 'former Richmond House'],
+    lat: 53.75757630386573, lon: -2.692446489275293,
+    category: 'regeneration',
+  },
+  {
+    id: 'harris-institute-art-school',
+    name: 'Harris Institute and Art School',
+    aliases: ['Harris Institute and Art School Preston', 'Harris Institute and Art School development', 'Harris Institute and Art School regeneration', 'harris arts institute'],
+    lat: 53.75464458156285, lon: -2.6989530029532167,
+    category: 'landmark',
+  },
+  {
+    id: 'foxton-centre',
+    name: 'Foxton Centre',
+    aliases: ['the Foxton Centre', 'Foxton Centre Preston'],
+    lat: 53.756494832460206, lon: -2.6938323732604013,
+    category: 'landmark',
+  },
+  {
+    id: 'lancastria-house',
+    name: 'Lancastria House',
+    aliases: ['Lancastria House office block', 'former Lancastria House'],
+    lat: 53.761060639333756, lon: -2.698990898944294,
+    category: 'landmark',
+  },
+  {
+    id: 'horrocks-mill',
+    name: 'Horrocks Mill',
+    aliases: ['Horrocks Mill development', 'Horrocks Mill regeneration', 'former Horrocks Mill', 'Horrcks Mill scheme'],
+    lat: 53.75890573525782, lon: -2.6906827827097954,
+    category: 'regeneration',
+  },
+  {
+    id: 'worden-park',
+    name: 'Worden Park',
+    aliases: ['Worden Park Leyland', 'Worden Hall', 'Worden Park and Hall'],
+    lat: 53.68401873677664, lon: -2.6994769732640043,
+    category: 'landmark',
+  },
+  { 
+    id: 'hurst-grange-park',
+    name: 'Hurst Grange Park',
+    aliases: ['Hurst Grange Park Penwortham', 'Hurst Grange Coach House', 'Hurst Grange development', 'Hurst Grange regeneration'],
+    lat: 53.746360546914694, lon: -2.7223345880907566,
+    category: 'landmark',
   },
   {
     id: 'city-centre-plan',
@@ -167,6 +272,9 @@ export const PRESTON_GAZETTEER = [
   },
 
   // Areas & districts — city neighbourhoods and outlying towns
+  { id: 'avenham', name: 'Avenham', aliases: ['Avenham area', 'Avenham district'], lat: 53.755311650144534, lon: -2.6994388669292557, category: 'area' },
+  { id: 'bamber-bridge', name: 'Bamber Bridge', aliases: ['Bamber Bridge area', 'Bamber Bridge district'], lat: 53.726827795120926, lon: -2.6608119072167553, category: 'area' },
+  { id: 'barton', name: 'Barton', aliases: ['Barton area', 'Barton district', 'Cardwell Farm'], lat: 53.83287727508496, lon: -2.736396818654438, category: 'area' },
   { id: 'fulwood', name: 'Fulwood', aliases: ['Fulwood area', 'Fulwood district'], lat: 53.7736, lon: -2.7094, category: 'area' },
   { id: 'ribbleton', name: 'Ribbleton', aliases: ['Ribbleton area', 'Ribbleton Avenue'], lat: 53.7637, lon: -2.6786, category: 'area' },
   { id: 'ashton', name: 'Ashton-on-Ribble', aliases: ['Ashton', 'Ashton district'], lat: 53.7565, lon: -2.7290, category: 'area' },
@@ -179,6 +287,23 @@ export const PRESTON_GAZETTEER = [
   { id: 'longridge', name: 'Longridge', aliases: ['Longridge town', 'Longridge area'], lat: 53.8237, lon: -2.6010, category: 'area' },
   { id: 'leyland', name: 'Leyland', aliases: ['Leyland town', 'Leyland area', 'South Ribble'], lat: 53.6929, lon: -2.6896, category: 'area' },
   { id: 'chorley', name: 'Chorley', aliases: ['Chorley town', 'Chorley area'], lat: 53.6524, lon: -2.6324, category: 'area' },
+  { id: 'savick', name: 'Savick', aliases: ['Savick area', 'Savick district'], lat: 53.76835018696688, lon: -2.75495796978906, category: 'area' },
+  { id: 'broughton', name: 'Broughton', aliases: ['Broughton area', 'Broughton district'], lat: 53.811076190775466, lon: -2.7181131944666292, category: 'area' },
+  { id: 'cottam', name: 'Cottam', aliases: ['Cottam area', 'Cottam district', 'cottam park', 'cottam railway station', 'cottam park railway station', 'cottam parkway railway station'], lat: 53.783728710705574, lon: -2.760833752031781, category: 'area' },
+  { id: 'woodplumpton', name: 'Woodplumpton', aliases: ['Woodplumpton area', 'Woodplumpton district'], lat: 53.80414279600218, lon: -2.760625164645247, category: 'area' },
+  { id: 'cuerdale', name: 'Cuerdale', aliases: ['Cuerdale area', 'Cuerdale district', 'Cuerdale Garden Village'], lat: 53.75675186228656, lon: -2.623151281858694, category: 'area' },
+  { id: 'kirkham', name: 'Kirkham', aliases: ['Kirkham town', 'Kirkham area', 'Kirkham high street'], lat: 53.78206967851806, lon: -2.8716089337185178, category: 'area' },
+  { id: 'ulnes-walton', name: 'Ulnes Walton', aliases: ['Ulnes Walton area', 'Ulnes Walton district'], lat: 53.66328102937137, lon: -2.7387591989206057, category: 'area' },
+  { id: 'ribchester', name: 'Ribchester', aliases: ['Ribchester village', 'Ribchester area'], lat: 53.81366524256515, lon: -2.5319813127202773, category: 'area' },
+  { id: 'lea', name: 'Lea', aliases: ['Lea area', 'Lea district', 'the Larches', 'Larches estate', 'Lea town'], lat: 53.76754372878456, lon: -2.759406980350832, category: 'area' },
+  { id: 'garstang', name: 'Garstang', aliases: ['Garstang town', 'Garstang area'], lat: 53.90393664474612, lon: -2.7773386960654762, category: 'area' },
+  { id: 'wrea-green', name: 'Wrea Green', aliases: ['Wrea Green village', 'Wrea Green area'], lat: 53.77665810463038, lon: -2.916174634238348, category: 'area' },
+  { id: 'longton', name: 'Longton', aliases: ['Longton town', 'Longton area'], lat: 53.72646552668165, lon: -2.7859143212535624, category: 'area' },
+  { id: 'new-longton', name: 'New Longton', aliases: ['New Longton village', 'New Longton area'], lat: 53.72243638367701, lon: -2.74445175963114, category: 'area' },
+  { id: 'ingol', name: 'Ingol', aliases: ['Ingol area', 'Tanterton', 'Ingol and Tanterton', 'Cottam Brickworks'], lat: 53.780504894899565, lon: -2.742821975824866, category: 'area' },
+  { id: 'grimsargh', name: 'Grimsargh', aliases: ['Grimsargh village', 'Grimsargh area'], lat: 53.8043074006207, lon: -2.633207794746664, category: 'area' },
+  { id: 'little-plumpton', name: 'Little Plumpton', aliases: ['Little Plumpton village', 'Little Plumpton area', 'Roseacre Wood'], lat: 53.786706382790456, lon: -2.9429029960805955, category: 'area' },
+  { id: 'fishwick', name: 'Fishwick', aliases: ['Fishwick area', 'Fishwick district'], lat: 53.765809123620684, lon: -2.6631962553454223, category: 'area' },
 
   // Streets (excluded from map markers — used for text matching only)
   { id: 'fishergate', name: 'Fishergate', aliases: [], lat: 53.75761986983696, lon: -2.704416276171275, category: 'street' },
@@ -197,14 +322,22 @@ export const PRESTON_GAZETTEER = [
   { id: 'broadgate', name: 'Broadgate', aliases: [], lat: 53.75134522679838, lon: -2.7159862562538297, category: 'street' },
   { id: 'queen-street', name: 'Queen Street', aliases: [], lat: 53.758963711036316, lon: -2.693367640911167, category: 'street' },
   { id: 'fylde-road', name: 'Fylde Road', aliases: [], lat: 53.764880397756095, lon: -2.7153101961822457, category: 'street' },
+  { id: 'pole-street', name: 'Pole Street', aliases: [], lat: 53.76086312543519, lon: -2.6937611036278195, category: 'street' },
+  { id: 'west-cliff', name: 'West Cliff', aliases: ['w cliff'], lat: 53.753727449314404, lon: -2.709480263572475, category: 'street' },
+  { id: 'penny-street', name: 'Penny Street', aliases: [], lat: 53.763855002907725, lon: -2.699148877919565, category: 'street' },
+  { id: 'eastway', name: 'Eastway', aliases: [], lat: 53.79476694537546, lon: -2.6922303597662967, category: 'street' },
+  { id: 'sandyforth-lane', name: 'Sandyforth Lane', aliases: [], lat: 53.79668491202212, lon: -2.7394825918190584, category: 'street' },
+  { id: 'maudland bank', name: 'Maudland Bank', aliases: [], lat: 53.76355478220047, lon: -2.711785807100862, category: 'street' },
+  { id: 'preston-new-road', name: 'Preston New Road', aliases: [], lat: 53.769463142460815, lon: -2.5683660155879484, category: 'street' },
+  { id: 'winckley-street', name: 'Winckley Street', aliases: ['winckley st'], lat: 53.75748780245978, lon: -2.7020343934501097, category: 'street' },
 ];
 
 // Articles whose titles contain any of these are excluded regardless of regen score.
 export const NEGATIVE_KEYWORDS = [
   // Road / traffic / Rail
-  'speed limit', 'speed camera', 'speed bump', 'speed humps', 'bus gate', 'bus lane', 'road closure', 'road scheme', 'road works', 'roadworks', 'pothole', 'potholes', 'traffic light', 'traffic lights', 'traffic calming', 'cycle lane', 'cycle path', 'hs2', 'rail replacement', 'railway works', 'train delay', 'train cancelled', 'rail disruption', 'rail strike', 'bus strike',
+  'speed limit', 'speed camera', 'speed bump', 'speed humps', 'bus gate', 'bus lane', 'road closure', 'road scheme', 'road works', 'roadworks', 'pothole', 'potholes', 'traffic light', 'traffic lights', 'traffic calming', 'cycle lane', 'cycle path', 'hs2', 'rail replacement', 'railway works', 'train delay', 'train cancelled', 'rail disruption', 'rail strike', 'bus strike', 'lancashire bus', 'cycle hire', 'tramlines', 'park and ride', 'preston western distributor', 'preston western distributor road', 'preston western bypass', 'preston western relief road', 'road resurfacing', 'road resurfacing scheme', 'road resurfacing works', 'road resurfacing roadworks', 'road resurfacing potholes', 'road resurfacing delays', 'road resurfacing disruption', 'road resurfacing traffic', 'road resurfacing traffic lights', 'road resurfacing traffic calming', 'road resurfacing bus lane', 'road resurfacing cycle lane', 'road resurfacing cycle path',
   // Crime / incidents
-  'stabbing', 'shooting', 'assault', 'murder', 'arson', 'drug', 'drugs', 'covid', 'coronavirus', 'covid-19',
+  'stabbing', 'shooting', 'assault', 'murder', 'arson', 'drug', 'drugs', 'covid', 'coronavirus', 'covid-19', 'racial', 'religious hate',
   // Sport / events (unless tied to venue development)
   'preston north end', 'match report', 'fixtures', 'transfer',
   // Parking / fines
@@ -212,7 +345,9 @@ export const NEGATIVE_KEYWORDS = [
   // Preston Culture / Events
   'festivals', 'encounter festival', 'caribbean festival', 'carnivals', 'carnival', 'egg-rolling', 'festival', 'music in the park', 'bluestreak arts', 
   // Support 
-  'household support fund', 'ukraine', 'ukrainian', 'afghanistan', 'refugee', 'afghan'
+  'household support fund', 'ukraine', 'ukrainian', 'afghanistan', 'refugee', 'afghan',
+  // Other
+  'wind farm', 'planning applications', 'planning round-up', 'armed forces group', 'haweswater aqueduct', 'town twinning', 'homelessness', 'rough sleepers', 'ticket office'
 ];
 
 // Regeneration-relevant terms with weights. Used for scoring articles.
