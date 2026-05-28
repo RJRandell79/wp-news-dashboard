@@ -78,7 +78,7 @@ app.get('/posts/geo', (req, res) => {
     const match = matchGazetteer(post);
     if (!match || match.category === 'street') continue;
     if (!locationMap.has(match.id)) locationMap.set(match.id, { entry: match, articles: [] });
-    locationMap.get(match.id).articles.push({ id: post.id, title: post.title, link: post.link, date: post.date });
+    locationMap.get(match.id).articles.push({ id: post.id, title: post.title, link: post.link, date: post.date, excerpt: post.excerpt });
   }
 
   const features = Array.from(locationMap.values()).map(({ entry, articles }) => ({

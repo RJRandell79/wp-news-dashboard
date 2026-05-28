@@ -127,13 +127,20 @@
     .mapboxgl-popup-content { font-size: 13px; line-height: 1.5; }
     .mapboxgl-popup-content strong { display: block; margin-bottom: 6px; }
     .mapboxgl-popup-content .article-links { max-height: 200px; overflow-y: auto; }
-    .mapboxgl-popup-content .article-links a {
-      display: block; color: #e74c3c; text-decoration: none;
-      padding: 3px 0; border-bottom: 1px solid #f0f0f0; font-size: 12px;
+    .art-item { padding: 7px 0; border-bottom: 1px solid #f0f0f0; }
+    .art-item:last-child { border-bottom: none; }
+    .art-title { font-size: 12px; font-weight: 500; color: #222; line-height: 1.4; }
+    .art-date  { display: block; font-size: 11px; color: #aaa; margin-top: 2px; }
+    .art-excerpt {
+      display: block; color: #666; font-size: 11px;
+      line-height: 1.5; margin-top: 3px;
     }
-    .mapboxgl-popup-content .article-links a:last-child { border: none; }
-    .mapboxgl-popup-content .article-links a:hover { text-decoration: underline; }
-    .mapboxgl-popup-content .article-links .art-date { color: #aaa; font-size: 11px; }
+    .art-link {
+      display: inline-block; margin-top: 5px;
+      font-size: 11px; font-weight: 600;
+      color: #e74c3c; text-decoration: none;
+    }
+    .art-link:hover { text-decoration: underline; }
 
     #legend {
       position: absolute; bottom: 32px; left: 12px; z-index: 1;
@@ -262,6 +269,13 @@
       }
 
       document.getElementById('search-clear').style.display = q ? 'block' : 'none';
+    }
+
+    function plainText(html) {
+      if (!html) return '';
+      const div = document.createElement('div');
+      div.innerHTML = html;
+      return (div.textContent || div.innerText || '').trim();
     }
 
     function formatDate(iso) {
@@ -548,12 +562,16 @@
 
       map.flyTo({ center: coords, zoom: Math.max(map.getZoom(), 15), speed: 1.4 });
 
-      const links = articles.map(a =>
-        `<a href="${a.link}" target="_blank" rel="noopener noreferrer">
-          ${a.title}
+      const links = articles.map(a => {
+        const excerpt = plainText(a.excerpt);
+        const short   = excerpt.length > 140 ? excerpt.slice(0, 140).trimEnd() + '…' : excerpt;
+        return `<div class="art-item">
+          <div class="art-title">${a.title}</div>
           <span class="art-date">${formatDate(a.date)}</span>
-        </a>`
-      ).join('');
+          ${short ? `<span class="art-excerpt">${short}</span>` : ''}
+          <a href="${a.link}" class="art-link" target="_blank" rel="noopener noreferrer">Read article &#8594;</a>
+        </div>`;
+      }).join('');
 
       activePopup = new mapboxgl.Popup({ maxWidth: '320px' })
         .setLngLat(coords)
