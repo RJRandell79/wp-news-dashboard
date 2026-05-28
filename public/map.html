@@ -53,7 +53,9 @@
     }
     .loc-header:hover  { background: #f0f0f0; }
     .loc-header.active { background: #fdecea; border-left: 3px solid #e74c3c; padding-left: 21px; }
-    .loc-name  { flex: 1; font-size: 13px; font-weight: 500; color: #222; line-height: 1.4; }
+    .loc-name  { font-size: 13px; font-weight: 500; color: #222; line-height: 1.4; }
+    .loc-meta  { flex: 1; min-width: 0; }
+    .loc-date  { font-size: 11px; color: #aaa; margin-top: 2px; }
     .loc-count {
       font-size: 11px; font-weight: 600; color: #fff;
       border-radius: 10px; padding: 1px 7px; flex-shrink: 0;
@@ -136,6 +138,18 @@
     };
     const CATEGORY_ORDER = ['regeneration', 'proposed', 'landmark', 'area'];
 
+    function formatDate(iso) {
+      if (!iso) return '';
+      const d      = new Date(iso.slice(0, 10) + 'T00:00:00');
+      const day    = d.getDate();
+      const month  = d.toLocaleDateString('en-GB', { month: 'long' });
+      const year   = d.getFullYear();
+      const s      = day % 100;
+      const suffix = (s >= 11 && s <= 13) ? 'th'
+        : { 1: 'st', 2: 'nd', 3: 'rd' }[day % 10] ?? 'th';
+      return `${day}${suffix} ${month} ${year}`;
+    }
+
     let activePopup  = null;
     let activeHeader = null;
 
@@ -206,8 +220,12 @@
 
             const header = document.createElement('div');
             header.className = 'loc-header';
+            const latestDate = formatDate(articles[0]?.date);
             header.innerHTML = `
-              <span class="loc-name">${location}</span>
+              <div class="loc-meta">
+                <div class="loc-name">${location}</div>
+                <div class="loc-date">${latestDate}</div>
+              </div>
               <span class="loc-count" style="background:${colour}">${count}</span>
               <span class="loc-chevron">&#9654;</span>`;
 
@@ -218,7 +236,7 @@
               link.href = a.link;
               link.target = '_blank';
               link.rel = 'noopener noreferrer';
-              link.innerHTML = `${a.title}<div class="article-date">${a.date.slice(0, 10)}</div>`;
+              link.innerHTML = `${a.title}<div class="article-date">${formatDate(a.date)}</div>`;
               articleList.appendChild(link);
             });
 
@@ -327,7 +345,7 @@
       const links = articles.map(a =>
         `<a href="${a.link}" target="_blank" rel="noopener noreferrer">
           ${a.title}
-          <span class="art-date">${a.date.slice(0, 10)}</span>
+          <span class="art-date">${formatDate(a.date)}</span>
         </a>`
       ).join('');
 
