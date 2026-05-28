@@ -115,6 +115,11 @@
     }
     .art-text { flex: 1; min-width: 0; }
 
+    /* Timeline chart */
+    .loc-chart { display: none; padding: 8px 16px 6px 36px; background: #f8f8f8; border-bottom: 1px solid #ececec; }
+    .loc-chart.open { display: block; }
+    .loc-chart-label { font-size: 10px; color: #aaa; margin-bottom: 3px; text-transform: uppercase; letter-spacing: .03em; }
+
     /* Empty state */
     #empty-state {
       display: none; padding: 32px 16px;
@@ -309,6 +314,52 @@
       return d.toISOString().slice(0, 10);
     }
 
+    function buildChart(articles, colour) {
+      // Group by YYYY-MM
+      const counts = {};
+      articles.forEach(a => {
+        const key = a.date.slice(0, 7);
+        counts[key] = (counts[key] || 0) + 1;
+      });
+      const keys = Object.keys(counts).sort();
+      if (keys.length < 2) return ''; // single month — not worth charting
+
+      // Fill every month between first and last
+      const months = [];
+      let [y, mo] = keys[0].split('-').map(Number);
+      const [ey, em] = keys[keys.length - 1].split('-').map(Number);
+      while (y < ey || (y === ey && mo <= em)) {
+        const key = `${y}-${String(mo).padStart(2, '0')}`;
+        months.push({ key, count: counts[key] || 0, year: y });
+        if (++mo > 12) { mo = 1; y++; }
+      }
+
+      const W = 248, H = 54, padB = 14, padT = 4;
+      const chartH = H - padT - padB;
+      const maxVal = Math.max(...months.map(m => m.count), 1);
+      const bw     = W / months.length;
+
+      let bars = '', labels = '', prevYear = null;
+      months.forEach(({ count, year }, i) => {
+        const x  = i * bw;
+        const bh = count ? Math.max(count / maxVal * chartH, 2) : 0;
+        const by = padT + chartH - bh;
+        if (count) {
+          bars += `<rect x="${(x + .5).toFixed(1)}" y="${by.toFixed(1)}" width="${Math.max(bw - 1, .5).toFixed(1)}" height="${bh.toFixed(1)}" fill="${colour}" opacity=".8" rx="1"/>`;
+        }
+        if (year !== prevYear) {
+          labels += `<text x="${(x + bw / 2).toFixed(1)}" y="${H - 2}" text-anchor="middle" font-size="8" fill="#aaa">${year}</text>`;
+          prevYear = year;
+        }
+      });
+
+      return `<div class="loc-chart-label">Coverage over time</div>
+        <svg width="100%" height="${H}" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+          <rect x="0" y="${padT}" width="${W}" height="${chartH}" fill="#e8e8e8" rx="1"/>
+          ${bars}${labels}
+        </svg>`;
+    }
+
     function buildSidebar(geojson, list, map) {
       // Clear previous state — wipe the list entirely then re-add the empty state node
       list.innerHTML = '';
@@ -384,6 +435,11 @@
             <span class="loc-count" style="background:${colour}">${count}</span>
             <span class="loc-chevron">&#9654;</span>`;
 
+          const chartSvg = buildChart(articles, colour);
+          const chartEl  = document.createElement('div');
+          chartEl.className = 'loc-chart';
+          if (chartSvg) chartEl.innerHTML = chartSvg;
+
           const articleList = document.createElement('div');
           articleList.className = 'article-list';
           articles.forEach(a => {
@@ -401,11 +457,13 @@
           header.addEventListener('click', () => {
             const opening = !articleList.classList.contains('open');
             articleList.classList.toggle('open', opening);
+            if (chartSvg) chartEl.classList.toggle('open', opening);
             header.classList.toggle('open', opening);
             flyTo(map, f, header, sectionHeader, sectionBody);
           });
 
           item.appendChild(header);
+          if (chartSvg) item.appendChild(chartEl);
           item.appendChild(articleList);
           sectionBody.appendChild(item);
         });
