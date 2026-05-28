@@ -21,6 +21,24 @@
       color: #333; text-transform: uppercase; flex-shrink: 0;
     }
 
+    /* Search bar */
+    #search-bar {
+      padding: 10px 16px; border-bottom: 1px solid #e0e0e0;
+      flex-shrink: 0; background: #fafafa; position: relative;
+    }
+    #search-input {
+      width: 100%; padding: 7px 30px 7px 10px; font-size: 13px;
+      border: 1px solid #ddd; border-radius: 4px; background: #fff;
+      color: #333; outline: none; transition: border-color .15s;
+    }
+    #search-input:focus { border-color: #e74c3c; }
+    #search-clear {
+      position: absolute; right: 24px; top: 50%; transform: translateY(-50%);
+      font-size: 16px; color: #bbb; cursor: pointer; display: none;
+      line-height: 1; background: none; border: none; padding: 0;
+    }
+    #search-clear:hover { color: #888; }
+
     /* Date filter bar */
     #filter-bar {
       display: flex; gap: 6px; padding: 10px 16px;
@@ -131,6 +149,10 @@
 <body>
   <div id="sidebar">
     <h1>Locations <span id="loc-count" style="font-weight:400;color:#888"></span></h1>
+    <div id="search-bar">
+      <input id="search-input" type="search" placeholder="Search locations…" autocomplete="off" />
+      <button id="search-clear" title="Clear search">&#x2715;</button>
+    </div>
     <div id="filter-bar">
       <button class="filter-btn active" data-days="">All</button>
       <button class="filter-btn" data-days="365">1 year</button>
@@ -171,6 +193,41 @@
     let activePopup    = null;
     let activeHeader   = null;
     let currentGeojson = null;
+    let map            = null;
+
+    function applySearch(query) {
+      const q    = query.trim().toLowerCase();
+      const list = document.getElementById('post-list');
+      const matched = [];
+
+      list.querySelectorAll('.cat-section').forEach(section => {
+        let visible = 0;
+        section.querySelectorAll('.loc-item').forEach(item => {
+          const name    = item.querySelector('.loc-name').textContent.toLowerCase();
+          const show    = !q || name.includes(q);
+          item.style.display = show ? '' : 'none';
+          if (show) {
+            visible++;
+            const f = currentGeojson.features[parseInt(item.dataset.index)];
+            if (f) matched.push(f);
+          }
+        });
+        section.style.display = visible ? '' : 'none';
+      });
+
+      // Update map to show only matched locations
+      const filtered = { type: 'FeatureCollection', features: matched };
+      map?.getSource('posts')?.setData(filtered);
+
+      if (matched.length) {
+        const bounds = new mapboxgl.LngLatBounds();
+        matched.forEach(f => bounds.extend(f.geometry.coordinates));
+        map?.fitBounds(bounds, { padding: 60, maxZoom: 15 });
+      }
+
+      // Show/hide clear button
+      document.getElementById('search-clear').style.display = q ? 'block' : 'none';
+    }
 
     function formatDate(iso) {
       if (!iso) return '';
@@ -317,7 +374,7 @@
       const { accessToken } = await fetch('/map').then(r => r.json());
       mapboxgl.accessToken = accessToken;
 
-      const map = new mapboxgl.Map({
+      map = new mapboxgl.Map({
         container: 'map',
         style: 'mapbox://styles/mapbox/light-v11',
         center: [-2.7038, 53.7589], // fallback — overridden by fitBounds once data loads
@@ -382,11 +439,22 @@
           },
         });
 
-        // Filter bar
+        // Search
+        const searchInput = document.getElementById('search-input');
+        const searchClear = document.getElementById('search-clear');
+        searchInput.addEventListener('input', () => applySearch(searchInput.value));
+        searchClear.addEventListener('click', () => {
+          searchInput.value = '';
+          applySearch('');
+        });
+
+        // Filter bar — clear search when switching date range
         document.querySelectorAll('.filter-btn').forEach(btn => {
           btn.addEventListener('click', () => {
             document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
+            searchInput.value = '';
+            searchClear.style.display = 'none';
             refresh(map, list, sinceDate(btn.dataset.days));
           });
         });
@@ -397,6 +465,11 @@
           const idx   = currentGeojson.features.findIndex(f => f.properties.location === props.location);
           const item  = list.querySelector(`[data-index="${idx}"]`);
           if (!item) return;
+          // If item is hidden by search, clear search first
+          if (item.style.display === 'none') {
+            document.getElementById('search-input').value = '';
+            applySearch('');
+          }
           const headerEl      = item.querySelector('.loc-header');
           const sectionBody   = item.closest('.cat-section-body');
           const sectionHeader = item.closest('.cat-section')?.querySelector('.cat-section-header');
