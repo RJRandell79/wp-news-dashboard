@@ -20,6 +20,22 @@
       padding: 14px 16px; border-bottom: 1px solid #e0e0e0;
       color: #333; text-transform: uppercase; flex-shrink: 0;
     }
+
+    /* Date filter bar */
+    #filter-bar {
+      display: flex; gap: 6px; padding: 10px 16px;
+      border-bottom: 1px solid #e0e0e0; flex-shrink: 0;
+      background: #fafafa;
+    }
+    .filter-btn {
+      flex: 1; padding: 5px 0; font-size: 12px; font-weight: 500;
+      border: 1px solid #ddd; border-radius: 4px;
+      background: #fff; color: #555; cursor: pointer;
+      transition: background .15s, color .15s, border-color .15s;
+    }
+    .filter-btn:hover   { background: #f0f0f0; }
+    .filter-btn.active  { background: #e74c3c; color: #fff; border-color: #e74c3c; }
+
     #post-list { flex: 1; overflow-y: auto; }
 
     /* Category section headers */
@@ -53,8 +69,8 @@
     }
     .loc-header:hover  { background: #f0f0f0; }
     .loc-header.active { background: #fdecea; border-left: 3px solid #e74c3c; padding-left: 21px; }
-    .loc-name  { font-size: 13px; font-weight: 500; color: #222; line-height: 1.4; }
     .loc-meta  { flex: 1; min-width: 0; }
+    .loc-name  { font-size: 13px; font-weight: 500; color: #222; line-height: 1.4; }
     .loc-date  { font-size: 11px; color: #aaa; margin-top: 2px; }
     .loc-count {
       font-size: 11px; font-weight: 600; color: #fff;
@@ -74,6 +90,12 @@
     .article-list a:last-child { border-bottom: none; }
     .article-list a:hover { background: #f0f0f0; color: #111; }
     .article-date { font-size: 11px; color: #aaa; margin-top: 2px; }
+
+    /* Empty state */
+    #empty-state {
+      display: none; padding: 32px 16px;
+      text-align: center; color: #aaa; font-size: 13px;
+    }
 
     /* Shared dot */
     .cat-dot {
@@ -109,7 +131,15 @@
 <body>
   <div id="sidebar">
     <h1>Locations <span id="loc-count" style="font-weight:400;color:#888"></span></h1>
-    <div id="post-list"></div>
+    <div id="filter-bar">
+      <button class="filter-btn active" data-days="">All</button>
+      <button class="filter-btn" data-days="365">1 year</button>
+      <button class="filter-btn" data-days="180">6 months</button>
+      <button class="filter-btn" data-days="30">30 days</button>
+    </div>
+    <div id="post-list">
+      <div id="empty-state">No articles found for this period.</div>
+    </div>
   </div>
 
   <div id="map-wrap">
@@ -138,6 +168,10 @@
     };
     const CATEGORY_ORDER = ['regeneration', 'proposed', 'landmark', 'area'];
 
+    let activePopup    = null;
+    let activeHeader   = null;
+    let currentGeojson = null;
+
     function formatDate(iso) {
       if (!iso) return '';
       const d      = new Date(iso.slice(0, 10) + 'T00:00:00');
@@ -150,8 +184,129 @@
       return `${day}${suffix} ${month} ${year}`;
     }
 
-    let activePopup  = null;
-    let activeHeader = null;
+    function sinceDate(days) {
+      if (!days) return null;
+      const d = new Date();
+      d.setDate(d.getDate() - parseInt(days));
+      return d.toISOString().slice(0, 10);
+    }
+
+    function buildSidebar(geojson, list, map) {
+      // Clear previous state — wipe the list entirely then re-add the empty state node
+      list.innerHTML = '';
+      const empty = document.createElement('div');
+      empty.id = 'empty-state';
+      empty.style.display = 'none';
+      empty.textContent = 'No articles found for this period.';
+      list.appendChild(empty);
+      if (activePopup)  { activePopup.remove();  activePopup  = null; }
+      if (activeHeader) { activeHeader.classList.remove('active'); activeHeader = null; }
+
+      document.getElementById('loc-count').textContent = `(${geojson.features.length})`;
+
+      if (!geojson.features.length) {
+        empty.style.display = 'block';
+        return;
+      }
+      empty.style.display = 'none';
+
+      // Group by category
+      const grouped = {};
+      CATEGORY_ORDER.forEach(c => grouped[c] = []);
+      geojson.features.forEach((f, i) => {
+        const cat = f.properties.category;
+        if (grouped[cat]) grouped[cat].push({ f, i });
+      });
+
+      CATEGORY_ORDER.forEach(cat => {
+        const items = grouped[cat];
+        if (!items.length) return;
+
+        const colour        = CATEGORY_COLOURS[cat];
+        const totalArticles = items.reduce((sum, { f }) => sum + f.properties.count, 0);
+
+        const section = document.createElement('div');
+        section.className = 'cat-section';
+
+        const sectionHeader = document.createElement('div');
+        sectionHeader.className = 'cat-section-header open';
+        sectionHeader.innerHTML = `
+          <span class="cat-dot" style="background:${colour}"></span>
+          <span class="cat-section-label">${CATEGORY_LABELS[cat]}</span>
+          <span class="cat-section-count" style="background:${colour}">${totalArticles}</span>
+          <span class="cat-section-chevron">&#9654;</span>`;
+
+        const sectionBody = document.createElement('div');
+        sectionBody.className = 'cat-section-body open';
+
+        sectionHeader.addEventListener('click', () => {
+          const opening = !sectionBody.classList.contains('open');
+          sectionBody.classList.toggle('open', opening);
+          sectionHeader.classList.toggle('open', opening);
+        });
+
+        items.forEach(({ f, i }) => {
+          const { location, count, articles: articlesJson } = f.properties;
+          const articles   = JSON.parse(articlesJson);
+          const latestDate = formatDate(articles[0]?.date);
+
+          const item = document.createElement('div');
+          item.className = 'loc-item';
+          item.dataset.index = i;
+
+          const header = document.createElement('div');
+          header.className = 'loc-header';
+          header.innerHTML = `
+            <div class="loc-meta">
+              <div class="loc-name">${location}</div>
+              <div class="loc-date">${latestDate}</div>
+            </div>
+            <span class="loc-count" style="background:${colour}">${count}</span>
+            <span class="loc-chevron">&#9654;</span>`;
+
+          const articleList = document.createElement('div');
+          articleList.className = 'article-list';
+          articles.forEach(a => {
+            const link = document.createElement('a');
+            link.href = a.link;
+            link.target = '_blank';
+            link.rel = 'noopener noreferrer';
+            link.innerHTML = `${a.title}<div class="article-date">${formatDate(a.date)}</div>`;
+            articleList.appendChild(link);
+          });
+
+          header.addEventListener('click', () => {
+            const opening = !articleList.classList.contains('open');
+            articleList.classList.toggle('open', opening);
+            header.classList.toggle('open', opening);
+            flyTo(map, f, header, sectionHeader, sectionBody);
+          });
+
+          item.appendChild(header);
+          item.appendChild(articleList);
+          sectionBody.appendChild(item);
+        });
+
+        section.appendChild(sectionHeader);
+        section.appendChild(sectionBody);
+        list.appendChild(section);
+      });
+    }
+
+    async function refresh(map, list, since) {
+      const locCount = document.getElementById('loc-count');
+      locCount.textContent = '(loading…)';
+      try {
+        const url      = since ? `/posts/geo?since=${since}` : '/posts/geo';
+        const res      = await fetch(url);
+        currentGeojson = await res.json();
+        buildSidebar(currentGeojson, list, map);
+        map.getSource('posts')?.setData(currentGeojson);
+      } catch (err) {
+        locCount.textContent = '(error)';
+        console.error('[refresh] failed:', err);
+      }
+    }
 
     async function init() {
       const { accessToken } = await fetch('/map').then(r => r.json());
@@ -167,98 +322,13 @@
       map.addControl(new mapboxgl.NavigationControl(), 'top-right');
 
       map.on('load', async () => {
-        const geojson = await fetch('/posts/geo').then(r => r.json());
-        const list    = document.getElementById('post-list');
+        const list = document.getElementById('post-list');
 
-        document.getElementById('loc-count').textContent = `(${geojson.features.length})`;
+        // Initial load
+        currentGeojson = await fetch('/posts/geo').then(r => r.json());
+        buildSidebar(currentGeojson, list, map);
 
-        // Group features by category, preserving original index for map lookups
-        const grouped = {};
-        CATEGORY_ORDER.forEach(c => grouped[c] = []);
-        geojson.features.forEach((f, i) => {
-          const cat = f.properties.category;
-          if (grouped[cat]) grouped[cat].push({ f, i });
-        });
-
-        // Build collapsible category sections
-        CATEGORY_ORDER.forEach(cat => {
-          const items = grouped[cat];
-          if (!items.length) return;
-
-          const colour = CATEGORY_COLOURS[cat];
-
-          const totalArticles = items.reduce((sum, { f }) => sum + f.properties.count, 0);
-
-          const section = document.createElement('div');
-          section.className = 'cat-section';
-
-          const sectionHeader = document.createElement('div');
-          sectionHeader.className = 'cat-section-header open';
-          sectionHeader.innerHTML = `
-            <span class="cat-dot" style="background:${colour}"></span>
-            <span class="cat-section-label">${CATEGORY_LABELS[cat]}</span>
-            <span class="cat-section-count" style="background:${colour}">${totalArticles}</span>
-            <span class="cat-section-chevron">&#9654;</span>`;
-
-          const sectionBody = document.createElement('div');
-          sectionBody.className = 'cat-section-body open';
-
-          sectionHeader.addEventListener('click', () => {
-            const opening = !sectionBody.classList.contains('open');
-            sectionBody.classList.toggle('open', opening);
-            sectionHeader.classList.toggle('open', opening);
-          });
-
-          // Build location rows inside this section
-          items.forEach(({ f, i }) => {
-            const { location, category, count, articles: articlesJson } = f.properties;
-            const articles = JSON.parse(articlesJson);
-
-            const item = document.createElement('div');
-            item.className = 'loc-item';
-            item.dataset.index = i;
-
-            const header = document.createElement('div');
-            header.className = 'loc-header';
-            const latestDate = formatDate(articles[0]?.date);
-            header.innerHTML = `
-              <div class="loc-meta">
-                <div class="loc-name">${location}</div>
-                <div class="loc-date">${latestDate}</div>
-              </div>
-              <span class="loc-count" style="background:${colour}">${count}</span>
-              <span class="loc-chevron">&#9654;</span>`;
-
-            const articleList = document.createElement('div');
-            articleList.className = 'article-list';
-            articles.forEach(a => {
-              const link = document.createElement('a');
-              link.href = a.link;
-              link.target = '_blank';
-              link.rel = 'noopener noreferrer';
-              link.innerHTML = `${a.title}<div class="article-date">${formatDate(a.date)}</div>`;
-              articleList.appendChild(link);
-            });
-
-            header.addEventListener('click', () => {
-              const opening = !articleList.classList.contains('open');
-              articleList.classList.toggle('open', opening);
-              header.classList.toggle('open', opening);
-              flyTo(map, f, header, sectionHeader, sectionBody);
-            });
-
-            item.appendChild(header);
-            item.appendChild(articleList);
-            sectionBody.appendChild(item);
-          });
-
-          section.appendChild(sectionHeader);
-          section.appendChild(sectionBody);
-          list.appendChild(section);
-        });
-
-        // Map layers
-        map.addSource('posts', { type: 'geojson', data: geojson, cluster: true, clusterMaxZoom: 13 });
+        map.addSource('posts', { type: 'geojson', data: currentGeojson, cluster: true, clusterMaxZoom: 13 });
 
         map.addLayer({
           id: 'clusters',
@@ -301,15 +371,25 @@
           },
         });
 
+        // Filter bar
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            refresh(map, list, sinceDate(btn.dataset.days));
+          });
+        });
+
+        // Map interactions
         map.on('click', 'posts-circles', e => {
           const props = e.features[0].properties;
-          const idx   = geojson.features.findIndex(f => f.properties.location === props.location);
+          const idx   = currentGeojson.features.findIndex(f => f.properties.location === props.location);
           const item  = list.querySelector(`[data-index="${idx}"]`);
           if (!item) return;
           const headerEl      = item.querySelector('.loc-header');
           const sectionBody   = item.closest('.cat-section-body');
           const sectionHeader = item.closest('.cat-section')?.querySelector('.cat-section-header');
-          flyTo(map, geojson.features[idx], headerEl, sectionHeader, sectionBody);
+          flyTo(map, currentGeojson.features[idx], headerEl, sectionHeader, sectionBody);
         });
 
         map.on('click', 'clusters', e => {
@@ -334,7 +414,6 @@
       if (activePopup)  activePopup.remove();
       if (activeHeader) activeHeader.classList.remove('active');
 
-      // Ensure the category section is expanded
       if (sectionBody && !sectionBody.classList.contains('open')) {
         sectionBody.classList.add('open');
         sectionHeader?.classList.add('open');

@@ -66,7 +66,10 @@ function regenScore(post) {
 }
 
 app.get('/posts/geo', (req, res) => {
-  const posts = db.prepare('SELECT id, title, link, excerpt, content, date FROM posts ORDER BY date DESC').all();
+  const since = req.query.since ?? null;
+  const posts = since
+    ? db.prepare('SELECT id, title, link, excerpt, content, date FROM posts WHERE date >= ? ORDER BY date DESC').all(since)
+    : db.prepare('SELECT id, title, link, excerpt, content, date FROM posts ORDER BY date DESC').all();
 
   const locationMap = new Map();
   for (const post of posts) {
