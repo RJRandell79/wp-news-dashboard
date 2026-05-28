@@ -142,8 +142,30 @@
     }
     .legend-dot {
       display: inline-block; width: 10px; height: 10px;
-      border-radius: 50%; margin-right: 6px; vertical-align: middle;
+      border-radius: 50%; flex-shrink: 0;
     }
+    .legend-checkbox {
+      appearance: none; -webkit-appearance: none;
+      width: 13px; height: 13px; flex-shrink: 0;
+      border: 2px solid var(--cb-color, #999);
+      border-radius: 3px; cursor: pointer; margin: 0;
+      background: var(--cb-color, #999); position: relative;
+      transition: background .15s, border-color .15s;
+    }
+    .legend-checkbox::after {
+      content: ''; position: absolute;
+      left: 2px; top: -1px; width: 5px; height: 8px;
+      border: 2px solid #fff; border-top: none; border-left: none;
+      transform: rotate(45deg);
+    }
+    .legend-checkbox:not(:checked) { background: transparent; border-color: #ccc; }
+    .legend-checkbox:not(:checked)::after { display: none; }
+    .legend-item {
+      display: flex; align-items: center; gap: 7px;
+      padding: 3px 0; cursor: pointer; user-select: none; line-height: 1.6;
+    }
+    .legend-item:hover { opacity: 0.8; }
+    .legend-item.hidden .legend-label { color: #bbb; }
   </style>
 </head>
 <body>
@@ -167,10 +189,10 @@
   <div id="map-wrap">
     <div id="map"></div>
     <div id="legend">
-      <span class="legend-dot" style="background:#e74c3c"></span>Regeneration<br>
-      <span class="legend-dot" style="background:#f39c12"></span>Proposed<br>
-      <span class="legend-dot" style="background:#3498db"></span>Landmark<br>
-      <span class="legend-dot" style="background:#27ae60"></span>Area
+      <label class="legend-item" data-category="regeneration"><input type="checkbox" class="legend-checkbox" data-category="regeneration" checked style="--cb-color:#e74c3c"><span class="legend-dot" style="background:#e74c3c"></span><span class="legend-label">Regeneration</span></label>
+      <label class="legend-item" data-category="proposed"><input type="checkbox" class="legend-checkbox" data-category="proposed" checked style="--cb-color:#f39c12"><span class="legend-dot" style="background:#f39c12"></span><span class="legend-label">Proposed</span></label>
+      <label class="legend-item" data-category="landmark"><input type="checkbox" class="legend-checkbox" data-category="landmark" checked style="--cb-color:#3498db"><span class="legend-dot" style="background:#3498db"></span><span class="legend-label">Landmark</span></label>
+      <label class="legend-item" data-category="area"><input type="checkbox" class="legend-checkbox" data-category="area" checked style="--cb-color:#27ae60"><span class="legend-dot" style="background:#27ae60"></span><span class="legend-label">Area</span></label>
     </div>
   </div>
 
@@ -190,34 +212,48 @@
     };
     const CATEGORY_ORDER = ['regeneration', 'proposed', 'landmark', 'area'];
 
-    let activePopup    = null;
-    let activeHeader   = null;
-    let currentGeojson = null;
-    let map            = null;
+    let activePopup      = null;
+    let activeHeader     = null;
+    let currentGeojson   = null;
+    let map              = null;
+    let hiddenCategories = new Set();
+
+    function getVisibleFeatures(query) {
+      if (!currentGeojson) return [];
+      const q = (query ?? '').trim().toLowerCase();
+      return currentGeojson.features.filter(f => {
+        if (hiddenCategories.has(f.properties.category)) return false;
+        if (q && !f.properties.location.toLowerCase().includes(q)) return false;
+        return true;
+      });
+    }
+
+    function toggleCategory(cat, isChecked) {
+      if (isChecked) hiddenCategories.delete(cat); else hiddenCategories.add(cat);
+      document.querySelector(`.legend-item[data-category="${cat}"]`)
+        ?.classList.toggle('hidden', !isChecked);
+      applySearch(document.getElementById('search-input')?.value ?? '');
+    }
 
     function applySearch(query) {
       const q    = query.trim().toLowerCase();
       const list = document.getElementById('post-list');
-      const matched = [];
 
       list.querySelectorAll('.cat-section').forEach(section => {
+        const cat = section.dataset.category;
+        if (hiddenCategories.has(cat)) { section.style.display = 'none'; return; }
         let visible = 0;
         section.querySelectorAll('.loc-item').forEach(item => {
-          const name    = item.querySelector('.loc-name').textContent.toLowerCase();
-          const show    = !q || name.includes(q);
+          const name = item.querySelector('.loc-name').textContent.toLowerCase();
+          const show = !q || name.includes(q);
           item.style.display = show ? '' : 'none';
-          if (show) {
-            visible++;
-            const f = currentGeojson.features[parseInt(item.dataset.index)];
-            if (f) matched.push(f);
-          }
+          if (show) visible++;
         });
         section.style.display = visible ? '' : 'none';
       });
 
-      // Update map to show only matched locations
-      const filtered = { type: 'FeatureCollection', features: matched };
-      map?.getSource('posts')?.setData(filtered);
+      const matched = getVisibleFeatures(query);
+      map?.getSource('posts')?.setData({ type: 'FeatureCollection', features: matched });
 
       if (matched.length) {
         const bounds = new mapboxgl.LngLatBounds();
@@ -225,7 +261,6 @@
         map?.fitBounds(bounds, { padding: 60, maxZoom: 15 });
       }
 
-      // Show/hide clear button
       document.getElementById('search-clear').style.display = q ? 'block' : 'none';
     }
 
@@ -284,6 +319,8 @@
 
         const section = document.createElement('div');
         section.className = 'cat-section';
+        section.dataset.category = cat;
+        if (hiddenCategories.has(cat)) section.style.display = 'none';
 
         const sectionHeader = document.createElement('div');
         sectionHeader.className = 'cat-section-header open';
@@ -358,10 +395,11 @@
         const res      = await fetch(url);
         currentGeojson = await res.json();
         buildSidebar(currentGeojson, list, map);
-        map.getSource('posts')?.setData(currentGeojson);
-        if (currentGeojson.features.length) {
+        const visibleAfterRefresh = getVisibleFeatures(document.getElementById('search-input')?.value ?? '');
+        map.getSource('posts')?.setData({ type: 'FeatureCollection', features: visibleAfterRefresh });
+        if (visibleAfterRefresh.length) {
           const bounds = new mapboxgl.LngLatBounds();
-          currentGeojson.features.forEach(f => bounds.extend(f.geometry.coordinates));
+          visibleAfterRefresh.forEach(f => bounds.extend(f.geometry.coordinates));
           map.fitBounds(bounds, { padding: 60, maxZoom: 15 });
         }
       } catch (err) {
@@ -446,6 +484,11 @@
         searchClear.addEventListener('click', () => {
           searchInput.value = '';
           applySearch('');
+        });
+
+        // Category visibility toggles (legend checkboxes)
+        document.querySelectorAll('.legend-checkbox[data-category]').forEach(cb => {
+          cb.addEventListener('change', () => toggleCategory(cb.dataset.category, cb.checked));
         });
 
         // Filter bar — clear search when switching date range
