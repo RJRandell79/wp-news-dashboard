@@ -98,6 +98,6 @@ async function sync() {
   }
 }
 
-// Run immediately on start, then every 5 minutes
+// Run immediately on start, then every 30 minutes
 sync();
-cron.schedule('*/5 * * * *', sync);
+cron.schedule('*/30 * * * *', sync);
