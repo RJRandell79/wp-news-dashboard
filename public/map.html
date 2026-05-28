@@ -101,13 +101,19 @@
     .article-list { display: none; border-top: 1px solid #ececec; }
     .article-list.open { display: block; }
     .article-list a {
-      display: block; padding: 8px 16px 8px 36px;
+      display: flex; align-items: flex-start; gap: 8px;
+      padding: 8px 16px 8px 36px;
       font-size: 12px; color: #444; text-decoration: none;
       border-bottom: 1px solid #f0f0f0; line-height: 1.4;
     }
     .article-list a:last-child { border-bottom: none; }
     .article-list a:hover { background: #f0f0f0; color: #111; }
     .article-date { font-size: 11px; color: #aaa; margin-top: 2px; }
+    .art-thumb-sm {
+      width: 48px; height: 48px; object-fit: cover;
+      border-radius: 3px; flex-shrink: 0; margin-top: 1px;
+    }
+    .art-text { flex: 1; min-width: 0; }
 
     /* Empty state */
     #empty-state {
@@ -126,7 +132,7 @@
     #map { position: absolute; inset: 0; }
     .mapboxgl-popup-content { font-size: 13px; line-height: 1.5; }
     .mapboxgl-popup-content strong { display: block; margin-bottom: 6px; }
-    .mapboxgl-popup-content .article-links { max-height: 200px; overflow-y: auto; }
+    .mapboxgl-popup-content .article-links { max-height: 260px; overflow-y: auto; }
     .art-item { padding: 7px 0; border-bottom: 1px solid #f0f0f0; }
     .art-item:last-child { border-bottom: none; }
     .art-title { font-size: 12px; font-weight: 500; color: #222; line-height: 1.4; }
@@ -141,6 +147,12 @@
       color: #e74c3c; text-decoration: none;
     }
     .art-link:hover { text-decoration: underline; }
+    .art-inner { display: flex; gap: 8px; align-items: flex-start; }
+    .art-thumb {
+      width: 60px; height: 60px; object-fit: cover;
+      border-radius: 3px; flex-shrink: 0;
+    }
+    .art-body { flex: 1; min-width: 0; }
 
     #legend {
       position: absolute; bottom: 32px; left: 12px; z-index: 1;
@@ -379,7 +391,10 @@
             link.href = a.link;
             link.target = '_blank';
             link.rel = 'noopener noreferrer';
-            link.innerHTML = `${a.title}<div class="article-date">${formatDate(a.date)}</div>`;
+            const thumb = a.thumbnail
+              ? `<img class="art-thumb-sm" src="${a.thumbnail}" loading="lazy" onerror="this.style.display='none'">`
+              : '';
+            link.innerHTML = `${thumb}<div class="art-text">${a.title}<div class="article-date">${formatDate(a.date)}</div></div>`;
             articleList.appendChild(link);
           });
 
@@ -565,12 +580,18 @@
       const links = articles.map(a => {
         const excerpt = plainText(a.excerpt);
         const short   = excerpt.length > 140 ? excerpt.slice(0, 140).trimEnd() + '…' : excerpt;
-        return `<div class="art-item">
-          <div class="art-title">${a.title}</div>
-          <span class="art-date">${formatDate(a.date)}</span>
-          ${short ? `<span class="art-excerpt">${short}</span>` : ''}
-          <a href="${a.link}" class="art-link" target="_blank" rel="noopener noreferrer">Read article &#8594;</a>
-        </div>`;
+        const thumb   = a.thumbnail
+          ? `<img class="art-thumb" src="${a.thumbnail}" loading="lazy" onerror="this.style.display='none'">`
+          : '';
+        return `<div class="art-item"><div class="art-inner">
+          ${thumb}
+          <div class="art-body">
+            <div class="art-title">${a.title}</div>
+            <span class="art-date">${formatDate(a.date)}</span>
+            ${short ? `<span class="art-excerpt">${short}</span>` : ''}
+            <a href="${a.link}" class="art-link" target="_blank" rel="noopener noreferrer">Read article &#8594;</a>
+          </div>
+        </div></div>`;
       }).join('');
 
       activePopup = new mapboxgl.Popup({ maxWidth: '320px' })

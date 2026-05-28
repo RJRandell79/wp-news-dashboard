@@ -68,8 +68,8 @@ function regenScore(post) {
 app.get('/posts/geo', (req, res) => {
   const since = req.query.since ?? null;
   const posts = since
-    ? db.prepare('SELECT id, title, link, excerpt, content, date FROM posts WHERE date >= ? ORDER BY date DESC').all(since)
-    : db.prepare('SELECT id, title, link, excerpt, content, date FROM posts ORDER BY date DESC').all();
+    ? db.prepare('SELECT id, title, link, excerpt, content, date, thumbnail FROM posts WHERE date >= ? ORDER BY date DESC').all(since)
+    : db.prepare('SELECT id, title, link, excerpt, content, date, thumbnail FROM posts ORDER BY date DESC').all();
 
   const locationMap = new Map();
   for (const post of posts) {
@@ -78,7 +78,7 @@ app.get('/posts/geo', (req, res) => {
     const match = matchGazetteer(post);
     if (!match || match.category === 'street') continue;
     if (!locationMap.has(match.id)) locationMap.set(match.id, { entry: match, articles: [] });
-    locationMap.get(match.id).articles.push({ id: post.id, title: post.title, link: post.link, date: post.date, excerpt: post.excerpt });
+    locationMap.get(match.id).articles.push({ id: post.id, title: post.title, link: post.link, date: post.date, excerpt: post.excerpt, thumbnail: post.thumbnail });
   }
 
   const features = Array.from(locationMap.values()).map(({ entry, articles }) => ({
